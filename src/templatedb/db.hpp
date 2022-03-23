@@ -62,10 +62,10 @@ public:
     bool load_data_file(std::string & fname);
 
     std::vector<Value> execute_op(Operation op);
-
+     
 private:
     std::fstream file;
-    std::unordered_map<int, Value> table;
+    std::unordered_map<int, Value> table; // want to modify this to add tombstone
     size_t value_dimensions = 0;
     
     bool write_to_file();
