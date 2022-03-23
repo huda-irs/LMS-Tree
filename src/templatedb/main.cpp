@@ -7,11 +7,17 @@
 #include <vector>
 
 #include "operation.hpp"
+#include "db.hpp"
+#include "db.cpp"
 
 using namespace std;
 
 int main(){
-    templatedb::Operation test;
-    cout << test.type;
+    //templatedb::Operation test;
+   // cout << test.type;
+
+    templatedb::DB test;
+    test.newfiles();
+
     return 0;
 }

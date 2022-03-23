@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "templatedb/operation.hpp"
+#include "operation.hpp"
 
 namespace templatedb
 {
@@ -47,6 +47,7 @@ public:
     DB() {};
     ~DB() {close();};
 
+    void newfiles();
     Value get(int key);
     void put(int key, Value val);
     std::vector<Value> scan();
