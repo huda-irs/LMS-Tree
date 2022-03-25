@@ -90,7 +90,22 @@ Value DB::get(int key)
 
 void DB::put(int key, Value val)
 {
-    table[key] = val;
+    //table[key] = val;
+
+    //table.size();
+    if(table.size()<50){
+    	table.insert({key, val});
+    	//std::cout << "Table size is now " << std::to_string(table.size()) << " when entering key# " << std::to_string(key) << std::endl;
+    }
+    else{
+    	//std::cout << "table has reached max capacticy at size " << std::to_string(table.size()) << std::endl;
+    	this->file.open("l1SST0", std::ios::in | std::ios::out);
+    	write_to_file();
+    	table.clear();
+    	std::cout << "writen to file";
+    }
+
+    //std::cout << "key value is " << std::to_string(key) << " and table value visibilty is "<< table[key].visible << "\n" ;
 }
 
 

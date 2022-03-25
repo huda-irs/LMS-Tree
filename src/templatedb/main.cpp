@@ -25,5 +25,18 @@ int main(){
 
    	cout << queries.size() << " is the number of operations we have\n";
 
+   	Value prefetchTable[queries.size()];
+
+   	for(int i = 0; i < queries.size(); i++){
+   		prefetchTable[i].items = queries[i].args;
+   	}
+
+   	for(int i = 0; i < queries.size(); i++){
+   		if(queries[i].type == 3){
+   			test.put(queries[i].key,prefetchTable[i] );
+   		}
+
+   	}
+
     return 0;
 }
