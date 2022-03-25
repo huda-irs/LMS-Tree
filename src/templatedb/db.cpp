@@ -1,11 +1,13 @@
 #include "db.hpp"
+#include <iostream>
+#include <fstream> 
 
 using namespace templatedb;
 
-DB::DB( int incase){ // defining construct to assign values to intialize table and create our file system
+void DB::newfiles() // defining construct to assign values to intialize table and create our file system
+{ 
     std::string L1_0, L1_1;
     std::string L2_0, L2_1, L2_2, L2_3;
-
 
     // define file names that we need generated 
     L1_0 = "l1SST0";
@@ -14,69 +16,37 @@ DB::DB( int incase){ // defining construct to assign values to intialize table a
     L2_1 = "l2SST1";
     L2_2 = "l2SST2";
     L2_3 = "l2SST3";
-    std::cout << "checking if files exist /n";
 
     std::ifstream fid0(L1_0);
     if (!fid0.is_open()){
         std::ofstream levelingFile(L1_0);
         levelingFile.close();
-        std::cout << "creating " << L1_0 << " file /n"; 
-    }
-    else{
-        fid0.close();
     }
 
     std::ifstream fid1(L1_1);
     if (!fid1.is_open()){
         std::ofstream levelingFile(L1_1);
         levelingFile.close();
-        std::cout << "creating " << L1_0 << " file /n";
-    }
-    else{
-        fid1.close();
     }
 
     std::ifstream fid2(L2_0);
     if (!fid2.is_open()){
         std::ofstream levelingFile(L2_0);
         levelingFile.close();
-        std::cout << "creating " << L1_0 << " file /n";
-    }
-    else{
-        fid2.close();
     }
 
     std::ifstream fid3(L2_1);
     if (!fid3.is_open()){
         std::ofstream levelingFile(L2_1);
         levelingFile.close();
-        std::cout << "creating " << L1_0 << " file /n";
-    }else{
-        fid3.close();
     }
 
     std::ifstream fid4(L2_2);
     if (!fid4.is_open()){
         std::ofstream levelingFile(L2_2);
         levelingFile.close();
-        std::cout << "creating " << L1_0 << " file /n";
-    }
-    else{
-        fid4.close();
-    }
-
-    std::ifstream fid5(L2_3);
-    if (!fid5.is_open()){
-        std::ofstream levelingFile(L2_3);
-        levelingFile.close();
-        std::cout << "creating " << L1_0 << " file /n";
-    }
-    else{
-        fid5.close();
     }
     
-    std::cout << "exiting the creation of this/n";
-
 }
 
 Value DB::get(int key)

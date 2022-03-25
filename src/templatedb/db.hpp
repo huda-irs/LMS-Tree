@@ -43,11 +43,11 @@ class DB
 {
 public:
     db_status status;
-    
-    DB(){};
-    DB(int incase);
-    ~DB(){};
-    
+
+    DB() {};
+    ~DB() {close();};
+
+    void newfiles();
     Value get(int key);
     void put(int key, Value val);
     std::vector<Value> scan();

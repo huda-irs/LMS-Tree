@@ -14,9 +14,11 @@
 using namespace std;
 
 int main(){
-    // templatedb::Operation test;
-    // cout << test.type;
-    templatedb::DB test(0);
+    //templatedb::Operation test;
+   // cout << test.type;
+    templatedb::DB test;
+    test.newfiles();
+
    	cout<< "check files were created\n";
 
    	std::vector<Operation> queries;
