@@ -72,7 +72,8 @@ void DB::put(int key, Value val)
     	this->file.open("l1SST0", std::ios::in | std::ios::out);
     	write_to_file();
     	table.clear();
-    	std::cout << "writen to file";
+    	std::cout << "writen to file\n";
+    	this->file.close();
     }
 
     //std::cout << "key value is " << std::to_string(key) << " and table value visibilty is "<< table[key].visible << "\n" ;
@@ -254,11 +255,39 @@ bool DB::close()
 
 bool DB::write_to_file()
 {
-    file.clear();
+    //file.clear();
     file.seekg(0, std::ios::beg);
 
-    std::string header = std::to_string(table.size()) + ',' + std::to_string(value_dimensions) + '\n';
-    file << header;
+	if (file.peek() == std::ifstream::traits_type::eof())
+            {;} // figure out what to do with this later
+
+    int numelm;
+    std::string line;
+    std::getline(file, line); // First line is rows, col
+    //std::stringstream linestream(line);
+    
+    if(line.empty()){
+    	std::cout << "file is null\n" << std::endl;
+    	return false;
+    }
+    //std::getline(linestream, item, ',');
+    std::string item = line.substr(0, line.find(','));
+    numelm = std::stoi(item);
+
+    if(numelm < 100){
+
+    	std::string header = std::to_string(table.size() + numelm) + ',' + std::to_string(value_dimensions) + '\n';
+    	file.seekg(0, std::ios::beg);
+    	file << header;
+
+	}
+	else{
+		std::cout << "this level and sstablel is full. cannot write data\n" << std::endl;
+		return false;
+	}
+
+    file.seekg(0, std::ios::end);
+    file << '\n';
     for(auto item: table)
     {
         std::ostringstream line;
