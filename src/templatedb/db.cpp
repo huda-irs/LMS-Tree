@@ -64,7 +64,7 @@ void DB::put(int key, Value val)
 
     //table.size();
     if(table.size()<50){
-    	table.insert({key, val});
+    	table.insert({key, true, val});
     	//std::cout << "Table size is now " << std::to_string(table.size()) << " when entering key# " << std::to_string(key) << std::endl;
     }
     else{
@@ -107,18 +107,19 @@ std::vector<Value> DB::scan(int min_key, int max_key)
 
 void DB::del(int key)
 {
-    table.erase(key);
+    table.insert({key, false, null})
 }
 
 
 void DB::del(int min_key, int max_key)
 {
     for (auto it = table.begin(); it != table.end(); ) {
-        if ((it->first >= min_key) && (it->first <= max_key)){
-            table.erase(it++);
-        } else { 
-            ++it;
-        }
+        // if ((it->first >= min_key) && (it->first <= max_key)){
+        //     table.erase(it++);
+        // } else { 
+        //     ++it;
+        // }
+        del(it->first);
     }
 }
 
