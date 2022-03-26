@@ -65,10 +65,12 @@ public:
      
 private:
     std::fstream file;
-    std::unordered_map<int, bool, Value> table; // want to modify this to add tombstone
+    //std::unordered_map<int, bool, Value> table; // want to modify this to add tombstone
+    std::unordered_map<int,Value> table;
     size_t value_dimensions = 0;
     
     bool write_to_file();
+    std::vector<std::string> fileNames;
 };
 
 }   // namespace templatedb

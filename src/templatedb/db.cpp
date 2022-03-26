@@ -17,33 +17,46 @@ void DB::newfiles() // defining construct to assign values to intialize table an
     L2_2 = "l2SST2";
     L2_3 = "l2SST3";
 
+    fileNames.push_back(L1_0); 
+    fileNames.push_back(L1_1);
+    fileNames.push_back(L2_0);
+    fileNames.push_back(L2_1);
+    fileNames.push_back(L2_2);
+    fileNames.push_back(L2_3);
+
+
     std::ifstream fid0(L1_0);
     if (!fid0.is_open()){
         std::ofstream levelingFile(L1_0);
+        levelingFile << "0,0,-1,-1";
         levelingFile.close();
     }
 
     std::ifstream fid1(L1_1);
     if (!fid1.is_open()){
         std::ofstream levelingFile(L1_1);
+        levelingFile << "0,0,-1,-1";
         levelingFile.close();
     }
 
     std::ifstream fid2(L2_0);
     if (!fid2.is_open()){
         std::ofstream levelingFile(L2_0);
+        levelingFile << "0,0,-1,-1";
         levelingFile.close();
     }
 
     std::ifstream fid3(L2_1);
     if (!fid3.is_open()){
         std::ofstream levelingFile(L2_1);
+        levelingFile << "0,0,-1,-1";
         levelingFile.close();
     }
 
     std::ifstream fid4(L2_2);
     if (!fid4.is_open()){
         std::ofstream levelingFile(L2_2);
+        levelingFile << "0,0,-1,-1";
         levelingFile.close();
     }
     
@@ -61,19 +74,21 @@ Value DB::get(int key)
 void DB::put(int key, Value val)
 {
     //table[key] = val;
-
+    int list[2] ;
     //table.size();
     if(table.size()<50){
-    	table.insert({key, true, val});
+    	//table.insert({key, true, val});
+        table.insert({key,val});
     	//std::cout << "Table size is now " << std::to_string(table.size()) << " when entering key# " << std::to_string(key) << std::endl;
     }
     else{
     	//std::cout << "table has reached max capacticy at size " << std::to_string(table.size()) << std::endl;
-    	this->file.open("l1SST0", std::ios::in | std::ios::out);
+                //list[1] = table.end()->first;
+    	// this->file.open("l1SST0", std::ios::in | std::ios::out);
     	write_to_file();
     	table.clear();
     	std::cout << "writen to file\n";
-    	this->file.close();
+    	// this->file.close();
     }
 
     //std::cout << "key value is " << std::to_string(key) << " and table value visibilty is "<< table[key].visible << "\n" ;
@@ -107,19 +122,20 @@ std::vector<Value> DB::scan(int min_key, int max_key)
 
 void DB::del(int key)
 {
-    table.insert({key, false, null})
+   // table.insert({key, false, null})
+    table.erase(key);
 }
 
 
 void DB::del(int min_key, int max_key)
 {
     for (auto it = table.begin(); it != table.end(); ) {
-        // if ((it->first >= min_key) && (it->first <= max_key)){
-        //     table.erase(it++);
-        // } else { 
-        //     ++it;
-        // }
-        del(it->first);
+        if ((it->first >= min_key) && (it->first <= max_key)){
+            table.erase(it++);
+        } else { 
+            ++it;
+        }
+       // del(it->first);
     }
 }
 
@@ -255,7 +271,17 @@ bool DB::close()
 
 
 bool DB::write_to_file()
-{
+{   this->file.open(fileNames[0], std::ios::in | std::ios::out);
+    int min_key= table.begin()->first;
+        int max_key = table.begin()->first;
+        for(auto kv : table) {
+            if( min_key > kv.first){
+                min_key = kv.first;
+            }
+            if( max_key < kv.first ){
+                max_key = kv.first;
+            }
+    }
     //file.clear();
     file.seekg(0, std::ios::beg);
 
@@ -274,21 +300,48 @@ bool DB::write_to_file()
     //std::getline(linestream, item, ',');
     std::string item = line.substr(0, line.find(','));
     numelm = std::stoi(item);
+    std::string rest = line.substr(line.find(',')+1);
+    rest =  rest.substr(rest.find(',')+1); // gets us to min key
+    int mink = std::stoi(rest.substr(0, rest.find(',') ));
+    rest =  rest.substr(rest.find(',')+1); // gets us to max key
+    int maxk = (std::stoi(rest));
+    std::cout << "mink=" << std::to_string(mink) << std::endl;
+    std::cout << "maxk=" << std::to_string(maxk) << std::endl;
+    if(maxk< max_key || maxk == -1){
+        maxk = max_key;
+    }
+    if(mink > min_key || mink == -1){
+        mink = min_key;
+    }
 
     if(numelm < 100){
 
-    	std::string header = std::to_string(table.size() + numelm) + ',' + std::to_string(value_dimensions) + '\n';
+    	std::string header = std::to_string(table.size() + numelm) + ',' + std::to_string(value_dimensions) + ',' + std::to_string(mink) + ',' + std::to_string(maxk)+ '\n' ;
     	file.seekg(0, std::ios::beg);
     	file << header;
 
 	}
-	else{
-		std::cout << "this level and sstablel is full. cannot write data\n" << std::endl;
-		return false;
-	}
+    else{
+        this->file.close();
+        this->file.open(fileNames[1], std::ios::in | std::ios::out);
+       bool result= write_to_file();
+        //table.clear();
+        std::cout << "writen to file\n";
+        this->file.close();
+        return result;
+
+    }
+    // file[] = {LST0SS1, ....}
+    // file  = file + 1
+    // write_to_file()
+    // return 
+
+	// else{
+	// 	std::cout << "this level and sstablel is full. cannot write data\n" << std::endl;
+	// 	return false;
+	// }
 
     file.seekg(0, std::ios::end);
-    file << '\n';
     for(auto item: table)
     {
         std::ostringstream line;
