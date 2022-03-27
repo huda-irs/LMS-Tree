@@ -71,6 +71,7 @@ private:
     
     bool write_to_file();
     std::vector<std::string> fileNames;
+    int current_file;
 };
 
 }   // namespace templatedb

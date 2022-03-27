@@ -35,10 +35,29 @@ int main(){
 
    	for(int i = 0; i < queries.size(); i++){
    		if(queries[i].type == 3){
-   			test.put(queries[i].key,prefetchTable[i] );
+   			test.put(queries[i].key, prefetchTable[i] );
    		}
+      else if(queries[i].type == 2){
+        test.del(queries[i].key);
+      }
+      else if(queries[i].type == 1) {
+        test.scan();
+      }
+      else if(queries[i].type == 0){
+        test.get(queries[i].key);
+      }
+      else if(queries[i].type == 100){
+        continue;
+      }
+      else{
+        cout << "This opcode does not fall within the list available for this DB" << endl;
+        cout << "That is why this operation will be ignored and will continue with the rest of the queries" << endl;
+      }
+
 
    	}
+
+    // test.close();
 
     return 0;
 }

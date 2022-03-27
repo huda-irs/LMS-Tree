@@ -59,43 +59,96 @@ void DB::newfiles() // defining construct to assign values to intialize table an
         levelingFile << "0,0,-1,-1";
         levelingFile.close();
     }
+    std::ifstream fid5(L2_3);
+    if (!fid5.is_open()){
+        std::ofstream levelingFile(L2_3);
+        levelingFile << "0,0,-1,-1";
+        levelingFile.close();
+    }
+
+    this->current_file = 0;
     
 }
 
-Value DB::get(int key)
-{
-    if (table.count(key))
-        return table[key];
-    
+Value DB::get(int key) // be able to read from files to get the value we need if not in memtable
+{   int count = 0;
+    if (table.count(key)){
+        std::cout << "Value for key " << std::to_string(key) << " was found within memtable if visiblity of " << std::to_string(table[key].visible) << std::endl;
+        return (table[key].visible) ? table[key] : Value(false);
+    }
+    else {// this is where we want to start scanning to files
+        std::cout << "Value for key " << std::to_string(key) << " was not found within memtable must check memory"<<std::endl;
+
+        write_to_file();
+        table.clear();
+        
+        bool result;
+        int count = 0;
+        this->current_file = 1;
+        this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
+        for(int i = 0 ; i < 4 ; i++){ // look into level 1
+            load_data_file(fileNames[this->current_file]) ;
+            result = table.count(key);
+        
+            if(result){
+                std::cout << "Value was found in memory in file " << fileNames[this->current_file] << std::endl;
+                return (table[key].visible) ? table[key] : Value(false);
+            }
+            if(count >= 2){
+                count = 0;
+                this->file.close();
+                this->current_file -= 1;
+                this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
+            }
+        }
+
+        this->file.close();
+        this->current_file = 5;
+        this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
+        for(int i = 0 ; i < 16 ; i++){ // look into level 2
+            load_data_file(fileNames[this->current_file]) ;
+            result = table.count(key);
+        
+            if(result){
+                return (table[key].visible) ? table[key] : Value(false);
+            }
+            if(count >= 4){
+                count = 0;
+                this->file.close();
+                this ->current_file -= 1;
+                this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
+            }
+        }
+    }
+
+    std::cout << "closing file" << std::endl;
+    this->file.close();
+    std::cout << "reassigning current_file file to 0" << std::endl;
+    this->current_file = 0;
+    std::cout << "reassigned current_file file to 0" << std::endl;
     return Value(false);
 }
 
 
-void DB::put(int key, Value val)
+void DB::put(int key, Value val) // complete?
 {
-    //table[key] = val;
-    int list[2] ;
-    //table.size();
+
     if(table.size()<50){
-    	//table.insert({key, true, val});
+
         table.insert({key,val});
-    	//std::cout << "Table size is now " << std::to_string(table.size()) << " when entering key# " << std::to_string(key) << std::endl;
+
     }
     else{
-    	//std::cout << "table has reached max capacticy at size " << std::to_string(table.size()) << std::endl;
-                //list[1] = table.end()->first;
-    	// this->file.open("l1SST0", std::ios::in | std::ios::out);
+
     	write_to_file();
     	table.clear();
     	std::cout << "writen to file\n";
-    	// this->file.close();
-    }
 
-    //std::cout << "key value is " << std::to_string(key) << " and table value visibilty is "<< table[key].visible << "\n" ;
+    }
 }
 
 
-std::vector<Value> DB::scan()
+std::vector<Value> DB::scan() // be able to read from files to get the value we need if not in memtable
 {
     std::vector<Value> return_vector;
     for (auto pair: table)
@@ -107,7 +160,7 @@ std::vector<Value> DB::scan()
 }
 
 
-std::vector<Value> DB::scan(int min_key, int max_key)
+std::vector<Value> DB::scan(int min_key, int max_key) // be able to read from files to get the value we need if not in memtable
 {
     std::vector<Value> return_vector;
     for (auto pair: table)
@@ -122,20 +175,45 @@ std::vector<Value> DB::scan(int min_key, int max_key)
 
 void DB::del(int key)
 {
-   // table.insert({key, false, null})
-    table.erase(key);
+
+    bool exisit = table.count(key); // check if this value exisists in memetable
+    Value delete_key;
+    if(exisit){
+        std::cout << "key value " << std::to_string(key) << " exisists in the memetable" << std::endl; 
+        table.erase(key);
+    }
+    else{
+        delete_key.visible = false;
+        table.insert({key, delete_key});
+    }
+
+     std::cout << "key value " << std::to_string(key) << " is exists if the following value is 1: " << std::to_string(table.count(key)) << std::endl; 
+    
 }
 
 
-void DB::del(int min_key, int max_key)
+void DB::del(int min_key, int max_key) // complete?
 {
-    for (auto it = table.begin(); it != table.end(); ) {
-        if ((it->first >= min_key) && (it->first <= max_key)){
-            table.erase(it++);
-        } else { 
-            ++it;
+
+    if(max_key > min_key){
+        std::cout << "the min key is greater than max key. Enter correct range for deletion";
+    }
+
+    int key = min_key;
+    while(key <= max_key){
+        bool exisit = table.count(key); // check if this value exisists in memetable
+        Value delete_key;
+        if(exisit){
+            delete_key = table[key];
+            delete_key.visible = false;
+            table[key] = delete_key;
         }
-       // del(it->first);
+        else{
+            delete_key.visible = false;
+            table.insert({key, delete_key});
+        }
+
+        key += 1;
     }
 }
 
@@ -174,7 +252,7 @@ std::vector<Value> DB::execute_op(Operation op)
 }
 
 
-bool DB::load_data_file(std::string & fname)
+bool DB::load_data_file(std::string & fname) // correct this to recognize tombstone
 {
     std::ifstream fid(fname);
     if (fid.is_open())
@@ -212,77 +290,84 @@ bool DB::load_data_file(std::string & fname)
 }
 
 
-db_status DB::open(std::string & fname)
+// db_status DB::open(std::string & fname) // use this to recognizae tombstone
+// {
+//     this->file.open(fname, std::ios::in | std::ios::out);
+//     if (file.is_open())
+//     {
+//         this->status = OPEN;
+//         // New file implies empty file
+//         if (file.peek() == std::ifstream::traits_type::eof())
+//             return this->status;
+
+//         int key;
+//         std::string line;
+//         std::getline(file, line); // First line is rows, col
+//         while (std::getline(file, line))
+//         {
+//             std::stringstream linestream(line);
+//             std::string item;
+
+//             std::getline(linestream, item, ',');
+//             key = stoi(item);
+//             std::vector<int> items;
+//             while(std::getline(linestream, item, ','))
+//             {
+//                 items.push_back(stoi(item));
+//             }
+//             this->put(key, Value(items));
+//             if (value_dimensions == 0)
+//                 value_dimensions = items.size();
+//         }
+//     }
+//     else if (!file) // File does not exist
+//     {
+//         this->file.open(fname, std::ios::out);
+//         this->status = OPEN;
+//     }
+//     else
+//     {
+//         file.close();
+//         this->status = ERROR_OPEN;
+//     }
+
+//     return this->status; 
+// }
+
+
+bool DB::close() 
 {
-    this->file.open(fname, std::ios::in | std::ios::out);
-    if (file.is_open())
-    {
-        this->status = OPEN;
-        // New file implies empty file
-        if (file.peek() == std::ifstream::traits_type::eof())
-            return this->status;
-
-        int key;
-        std::string line;
-        std::getline(file, line); // First line is rows, col
-        while (std::getline(file, line))
+    for(auto file_check: this->fileNames){
+       this->file.open(file_check, std::ios::in | std::ios::out);
+        if (file.is_open())
         {
-            std::stringstream linestream(line);
-            std::string item;
+            this->write_to_file();
+            file.close();
+        }
+        //this->status = CLOSED;
+        return true;
+    }
+}
 
-            std::getline(linestream, item, ',');
-            key = stoi(item);
-            std::vector<int> items;
-            while(std::getline(linestream, item, ','))
-            {
-                items.push_back(stoi(item));
-            }
-            this->put(key, Value(items));
-            if (value_dimensions == 0)
-                value_dimensions = items.size();
+
+bool DB::write_to_file() // implement teiring
+{   std::cout << "writting to file" << std::endl;
+    this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
+      std::cout << " opened file to write into" << std::endl;
+
+    // determine min max keys from memtable
+    int min_key= table.begin()->first;
+    int max_key = table.begin()->first;
+    for(auto kv : table) {
+        if( min_key > kv.first){
+            min_key = kv.first;
+        }
+        if( max_key < kv.first ){
+            max_key = kv.first;
         }
     }
-    else if (!file) // File does not exist
-    {
-        this->file.open(fname, std::ios::out);
-        this->status = OPEN;
-    }
-    else
-    {
-        file.close();
-        this->status = ERROR_OPEN;
-    }
+    // end of finding min max of keys from memtable 
 
-    return this->status; 
-}
-
-
-bool DB::close()
-{
-    if (file.is_open())
-    {
-        this->write_to_file();
-        file.close();
-    }
-    this->status = CLOSED;
-
-    return true;
-}
-
-
-bool DB::write_to_file()
-{   this->file.open(fileNames[0], std::ios::in | std::ios::out);
-    int min_key= table.begin()->first;
-        int max_key = table.begin()->first;
-        for(auto kv : table) {
-            if( min_key > kv.first){
-                min_key = kv.first;
-            }
-            if( max_key < kv.first ){
-                max_key = kv.first;
-            }
-    }
-    //file.clear();
     file.seekg(0, std::ios::beg);
 
 	if (file.peek() == std::ifstream::traits_type::eof())
@@ -291,12 +376,13 @@ bool DB::write_to_file()
     int numelm;
     std::string line;
     std::getline(file, line); // First line is rows, col
-    //std::stringstream linestream(line);
     
     if(line.empty()){
-    	std::cout << "file is null\n" << std::endl;
+       // std::cout << "line says: " << line << std::endl;
+    //	std::cout << "file is null\n" << std::endl;
     	return false;
     }
+
     //std::getline(linestream, item, ',');
     std::string item = line.substr(0, line.find(','));
     numelm = std::stoi(item);
@@ -305,8 +391,8 @@ bool DB::write_to_file()
     int mink = std::stoi(rest.substr(0, rest.find(',') ));
     rest =  rest.substr(rest.find(',')+1); // gets us to max key
     int maxk = (std::stoi(rest));
-    std::cout << "mink=" << std::to_string(mink) << std::endl;
-    std::cout << "maxk=" << std::to_string(maxk) << std::endl;
+    //std::cout << "mink=" << std::to_string(mink) << std::endl;
+    //std::cout << "maxk=" << std::to_string(maxk) << std::endl;
     if(maxk< max_key || maxk == -1){
         maxk = max_key;
     }
@@ -314,7 +400,7 @@ bool DB::write_to_file()
         mink = min_key;
     }
 
-    if(numelm < 100){
+    if(numelm  < 100){
 
     	std::string header = std::to_string(table.size() + numelm) + ',' + std::to_string(value_dimensions) + ',' + std::to_string(mink) + ',' + std::to_string(maxk)+ '\n' ;
     	file.seekg(0, std::ios::beg);
@@ -323,24 +409,14 @@ bool DB::write_to_file()
 	}
     else{
         this->file.close();
-        this->file.open(fileNames[1], std::ios::in | std::ios::out);
-       bool result= write_to_file();
+        this->current_file = this->current_file+1;
+        bool result= write_to_file();
         //table.clear();
-        std::cout << "writen to file\n";
+        //std::cout << "writen to file\n";
         this->file.close();
         return result;
 
     }
-    // file[] = {LST0SS1, ....}
-    // file  = file + 1
-    // write_to_file()
-    // return 
-
-	// else{
-	// 	std::cout << "this level and sstablel is full. cannot write data\n" << std::endl;
-	// 	return false;
-	// }
-
     file.seekg(0, std::ios::end);
     for(auto item: table)
     {
@@ -348,8 +424,14 @@ bool DB::write_to_file()
         std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
         line << item.second.items.back();
         std::string value(line.str());
-        file << item.first << ',' << value << '\n';
+        //file << item.first << ',' << value << '\n';
+
+         file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
+
     }
+
+    this->file.close();
+    this ->current_file = 0;
 
     return true;
 }
