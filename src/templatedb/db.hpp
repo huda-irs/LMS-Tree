@@ -41,9 +41,10 @@ public:
 class Levels
 {
  public:
-    int size;
+    int numFiles;
     std::vector<std::string> fileNames;
     int fileSize;
+    Levels(){}
 };
 
 class DB
@@ -53,7 +54,7 @@ public:
 
     DB() {};
     ~DB() {close();};
-
+    std::vector<Levels> levelfiles ;
     void newfiles();
     Value get(int key);
     void put(int key, Value val);
@@ -77,8 +78,8 @@ private:
     size_t value_dimensions = 0;
     
     bool write_to_file();
-    std::vector<std::string> fileNames;
-    int current_file;
+    //std::vector<std::string> fileNames;
+    //int current_file;
 };
 
 }   // namespace templatedb

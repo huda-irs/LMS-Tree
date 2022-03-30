@@ -16,7 +16,10 @@ using namespace std;
 int main(){
     //templatedb::Operation test;
    // cout << test.type;
+      cout<< "hello\n";
+
     templatedb::DB test;
+    cout<< "hello\n";
     test.newfiles();
 
    	cout<< "check files were created\n";

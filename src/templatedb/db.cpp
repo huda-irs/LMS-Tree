@@ -17,12 +17,12 @@ void DB::newfiles() // defining construct to assign values to intialize table an
     L2_2 = "l2SST2";
     L2_3 = "l2SST3";
 
-    fileNames.push_back(L1_0); 
-    fileNames.push_back(L1_1);
-    fileNames.push_back(L2_0);
-    fileNames.push_back(L2_1);
-    fileNames.push_back(L2_2);
-    fileNames.push_back(L2_3);
+    // fileNames.push_back(L1_0); 
+    // fileNames.push_back(L1_1);
+    // fileNames.push_back(L2_0);
+    // fileNames.push_back(L2_1);
+    // fileNames.push_back(L2_2);
+    // fileNames.push_back(L2_3);
 
 
     std::ifstream fid0(L1_0);
@@ -66,14 +66,17 @@ void DB::newfiles() // defining construct to assign values to intialize table an
         levelingFile.close();
     }
 
-    this->current_file = 0;
+    std::cout<< "hello\n";
+
+    // this->current_file = 0;
     
-    Levels levelfiles[2];
-    levelfiles[0].size = 2;
-    levelfiles[0].fileNames = [L1_0, L1_1];
+    //std::vector<Levels> levelfiles[2];
+    levelfiles[2];
+    levelfiles[0].numFiles = 2;
+    levelfiles[0].fileNames.insert(levelfiles[0].fileNames.end(),{L1_0, L1_1});
     levelfiles[0].fileSize = 100;
-    levelfiles[1].size = 4;
-    levelfiles[1].fileNames = [L2_0, L2_1, L2_2, L2_3];
+    levelfiles[1].numFiles = 4;
+    levelfiles[1].fileNames.insert(levelfiles[1].fileNames.end(),{L2_0, L2_1, L2_2, L2_3});
     levelfiles[1].fileSize = 200;
 }
 
@@ -92,10 +95,10 @@ Value DB::get(int key) // be able to read from files to get the value we need if
         bool result;
         int count = 0;
         
-        for(int i = 0; i < levelfiles.size; i++){
-            int index = levelfiles[i].fileNames.size-1
+        for(int i = 0; i < levelfiles.size(); i++){
+            int index = levelfiles[i].numFiles-1;
             this->file.open(levelfiles[i].fileNames[index], std::ios::in | std::ios::out);
-            for(int j = levelfiles[i].fileNames.size * (levelfiles[i].fileSize/50); j < 0; j--){
+            for(int j = levelfiles[i].numFiles * (levelfiles[i].fileSize/50); j < 0; j--){
                 load_data_file(levelfiles[i].fileNames[index]);
                 result = table.count(key);
 
@@ -114,6 +117,7 @@ Value DB::get(int key) // be able to read from files to get the value we need if
             }
         }
         
+         std::cout << "Value was not found in memory in file "<< std::endl;
         // this->current_file = 1;
         // this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
         // for(int i = 0 ; i < 4 ; i++){ // look into level 1
@@ -368,7 +372,7 @@ bool DB::load_data_file(std::string & fname) // correct this to recognize tombst
 
 bool DB::close() 
 {
-    for(int i = 0; i < levelfiles.size; i++){
+    for(int i = 0; i < levelfiles.size(); i++){
     for(auto file_check: levelfiles[i].fileNames)
     {
        this->file.open(file_check, std::ios::in | std::ios::out);
@@ -386,10 +390,8 @@ bool DB::close()
 
 bool DB::write_to_file() // implement teiring
 {   std::cout << "writing to file" << std::endl;
-    this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
-      std::cout << " opened file to write into" << std::endl;
 
-    // determine min max keys from memtable
+	 // determine min max keys from memtable
     int min_key = table.begin()->first;
     int max_key = table.begin()->first;
     for(auto kv : table) {
@@ -400,26 +402,67 @@ bool DB::write_to_file() // implement teiring
             max_key = kv.first;
         }
     }
-    // end of finding min max of keys from memtable 
-
-    file.seekg(0, std::ios::beg);
-
-	if (file.peek() == std::ifstream::traits_type::eof())
-            {;} // figure out what to do with this later
+      // end of finding min max of keys from memtable 
 
     int numelm;
     std::string line;
-    std::getline(file, line); // First line is rows, col
-    
-    if(line.empty()){
-       // std::cout << "line says: " << line << std::endl;
-    //	std::cout << "file is null\n" << std::endl;
-    	return false;
-    }
+	for(int i = levelfiles[0].numFiles -1; i < 0; i --){
+    	this->file.open(levelfiles[0].fileNames[i], std::ios::in | std::ios::out);
+      	std::cout << " opened file to write into" << std::endl;
 
-    //std::getline(linestream, item, ',');
-    std::string item = line.substr(0, line.find(','));
-    numelm = std::stoi(item);
+    	file.seekg(0, std::ios::beg);
+
+		if (file.peek() == std::ifstream::traits_type::eof())
+	            {;} // figure out what to do with this later
+
+	    int numelm;
+	    std::getline(file, line); // First line is rows, col
+    
+	    if(line.empty()){
+	       // std::cout << "line says: " << line << std::endl;
+	    //	std::cout << "file is null\n" << std::endl;
+	    	return false;
+	    }
+
+	    //std::getline(linestream, item, ',');
+	    std::string item = line.substr(0, line.find(','));
+	    numelm = std::stoi(item);
+
+	    if(numelm == 0  && i != 0){
+	    	continue;
+	    }
+	    else if(numelm == 0  && i == 0){
+	    	break;
+	    }
+	    else if(numelm != 0 && numelm + table.size() <= levelfiles[1].fileSize){
+	    	continue;
+	    }
+	    else if(numelm != 0 && numelm + table.size() >= levelfiles[1].fileSize && i ==  levelfiles[0].numFiles -1 ){
+	    	//do compaction
+	    }
+	    else if(numelm != 0 && numelm + table.size() >= levelfiles[1].fileSize && i < levelfiles[0].numFiles -1 ){
+	    	this->file.close();
+	    	this->file.open(levelfiles[0].fileNames[i+1], std::ios::in | std::ios::out);
+	    	file.seekg(0, std::ios::beg);
+
+			if (file.peek() == std::ifstream::traits_type::eof())
+	            {;} // figure out what to do with this later
+
+		    std::getline(file, line); // First line is rows, col
+	    
+		    if(line.empty()){
+		       // std::cout << "line says: " << line << std::endl;
+		    //	std::cout << "file is null\n" << std::endl;
+		    	return false;
+		    }
+
+		    //std::getline(linestream, item, ',');
+		    std::string item = line.substr(0, line.find(','));
+		    numelm = std::stoi(item);
+	    }
+
+	}
+
     std::string rest = line.substr(line.find(',')+1);
     rest =  rest.substr(rest.find(',')+1); // gets us to min key
     int mink = std::stoi(rest.substr(0, rest.find(',') ));
@@ -434,23 +477,23 @@ bool DB::write_to_file() // implement teiring
         mink = min_key;
     }
 
-    if(numelm  < 100){
+    //if(numelm  < 100){
 
-    	std::string header = std::to_string(table.size() + numelm) + ',' + std::to_string(value_dimensions) + ',' + std::to_string(mink) + ',' + std::to_string(maxk)+ '\n' ;
-    	file.seekg(0, std::ios::beg);
-    	file << header;
+	std::string header = std::to_string(table.size() + numelm) + ',' + std::to_string(value_dimensions) + ',' + std::to_string(mink) + ',' + std::to_string(maxk)+ '\n' ;
+	file.seekg(0, std::ios::beg);
+	file << header;
 
-	}
-    else{
-        this->file.close();
-        this->current_file = this->current_file+1;
-        bool result= write_to_file();
-        //table.clear();
-        //std::cout << "written to file\n";
-        this->file.close();
-        return result;
+	//}
+    // else{
+    //     this->file.close();
+    //     this->current_file = this->current_file+1;
+    //     bool result= write_to_file();
+    //     //table.clear();
+    //     //std::cout << "written to file\n";
+    //     this->file.close();
+    //     return result;
 
-    }
+    // }
     file.seekg(0, std::ios::end);
     for(auto item: table)
     {
@@ -465,7 +508,7 @@ bool DB::write_to_file() // implement teiring
     }
 
     this->file.close();
-    this ->current_file = 0;
+    //this ->current_file = 0;
 
     return true;
 }
