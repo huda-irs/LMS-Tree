@@ -122,7 +122,7 @@ Value DB::get(int key) // be able to read from files to get the value we need if
     }
 
     std::cout << "closing file" << std::endl;
-    this->file.close();
+   // this->file.close();
     std::cout << "reassigning current_file file to 0" << std::endl;
     this->current_file = 0;
     std::cout << "reassigned current_file file to 0" << std::endl;
@@ -176,10 +176,10 @@ std::vector<Value> DB::scan(int min_key, int max_key) // be able to read from fi
 void DB::del(int key)
 {
 
-    bool exisit = table.count(key); // check if this value exisists in memetable
+    bool exisit = table.count(key); // check if this value exisists in memtable
     Value delete_key;
     if(exisit){
-        std::cout << "key value " << std::to_string(key) << " exisists in the memetable" << std::endl; 
+        std::cout << "key value " << std::to_string(key) << " exists in the memetable" << std::endl; 
         table.erase(key);
     }
     else{
@@ -337,7 +337,8 @@ bool DB::load_data_file(std::string & fname) // correct this to recognize tombst
 
 bool DB::close() 
 {
-    for(auto file_check: this->fileNames){
+    for(auto file_check: this->fileNames)
+    {
        this->file.open(file_check, std::ios::in | std::ios::out);
         if (file.is_open())
         {
@@ -345,18 +346,18 @@ bool DB::close()
             file.close();
         }
         //this->status = CLOSED;
-        return true;
     }
+    return true;
 }
 
 
 bool DB::write_to_file() // implement teiring
-{   std::cout << "writting to file" << std::endl;
+{   std::cout << "writing to file" << std::endl;
     this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
       std::cout << " opened file to write into" << std::endl;
 
     // determine min max keys from memtable
-    int min_key= table.begin()->first;
+    int min_key = table.begin()->first;
     int max_key = table.begin()->first;
     for(auto kv : table) {
         if( min_key > kv.first){
@@ -412,7 +413,7 @@ bool DB::write_to_file() // implement teiring
         this->current_file = this->current_file+1;
         bool result= write_to_file();
         //table.clear();
-        //std::cout << "writen to file\n";
+        //std::cout << "written to file\n";
         this->file.close();
         return result;
 
