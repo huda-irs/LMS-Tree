@@ -44,7 +44,9 @@ class Levels
     int numFiles;
     std::vector<std::string> fileNames;
     int fileSize;
-    Levels(){}
+    Levels(int _numFiles, int _fileSize){}
+
+    void insert(std::string fileName){fileNames.push_back(fileName);}
 };
 
 class DB

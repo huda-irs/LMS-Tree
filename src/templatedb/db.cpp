@@ -1,3 +1,5 @@
+// tunable parameters: size ratio, choosing between tiering and leveling
+
 #include "db.hpp"
 #include <iostream>
 #include <fstream> 
@@ -71,6 +73,12 @@ void DB::newfiles() // defining construct to assign values to intialize table an
     // this->current_file = 0;
     
     //std::vector<Levels> levelfiles[2];
+    // added in OH
+    Levels levelOne(2, 100);
+    levelOne.insert();
+    levelfiles.push_back(levelOne);
+
+
     levelfiles[2];
     levelfiles[0].numFiles = 2;
     levelfiles[0].fileNames.insert(levelfiles[0].fileNames.end(),{L1_0, L1_1});
@@ -181,7 +189,8 @@ void DB::put(int key, Value val) // complete?
 }
 
 
-std::vector<Value> DB::scan() // be able to read from files to get the value we need if not in memtable
+std::vector<Value> DB::scan() // be able to read from files to get the value we need if not in memtable 
+// OH: print in the terminal or a txt file, best way is to the terminal
 {
     std::vector<Value> return_vector;
     for (auto pair: table)
@@ -194,6 +203,7 @@ std::vector<Value> DB::scan() // be able to read from files to get the value we 
 
 
 std::vector<Value> DB::scan(int min_key, int max_key) // be able to read from files to get the value we need if not in memtable
+// OH: return how many values you found (in main method), return a vector of all the values
 {
     std::vector<Value> return_vector;
     for (auto pair: table)
