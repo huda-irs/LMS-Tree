@@ -68,6 +68,13 @@ void DB::newfiles() // defining construct to assign values to intialize table an
 
     this->current_file = 0;
     
+    Levels levelfiles[2];
+    levelfiles[0].size = 2;
+    levelfiles[0].fileNames = [L1_0, L1_1];
+    levelfiles[0].fileSize = 100;
+    levelfiles[1].size = 4;
+    levelfiles[1].fileNames = [L2_0, L2_1, L2_2, L2_3];
+    levelfiles[1].fileSize = 200;
 }
 
 Value DB::get(int key) // be able to read from files to get the value we need if not in memtable
@@ -84,47 +91,69 @@ Value DB::get(int key) // be able to read from files to get the value we need if
         
         bool result;
         int count = 0;
-        this->current_file = 1;
-        this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
-        for(int i = 0 ; i < 4 ; i++){ // look into level 1
-            load_data_file(fileNames[this->current_file]) ;
-            result = table.count(key);
         
-            if(result){
-                std::cout << "Value was found in memory in file " << fileNames[this->current_file] << std::endl;
-                return (table[key].visible) ? table[key] : Value(false);
-            }
-            if(count >= 2){
-                count = 0;
-                this->file.close();
-                this->current_file -= 1;
-                this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
-            }
-        }
+        for(int i = 0; i < levelfiles.size; i++){
+            int index = levelfiles[i].fileNames.size-1
+            this->file.open(levelfiles[i].fileNames[index], std::ios::in | std::ios::out);
+            for(int j = levelfiles[i].fileNames.size * (levelfiles[i].fileSize/50); j < 0; j--){
+                load_data_file(levelfiles[i].fileNames[index]);
+                result = table.count(key);
 
-        this->file.close();
-        this->current_file = 5;
-        this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
-        for(int i = 0 ; i < 16 ; i++){ // look into level 2
-            load_data_file(fileNames[this->current_file]) ;
-            result = table.count(key);
-        
-            if(result){
-                return (table[key].visible) ? table[key] : Value(false);
-            }
-            if(count >= 4){
+                if(result){
+                    std::cout << "Value was found in memory in file " << levelfiles[i].fileNames[index] << std::endl;
+                    return (table[key].visible) ? table[key] : Value(false);
+                }
+
+                if(count >= levelfiles[i].fileSize/50){
                 count = 0;
                 this->file.close();
-                this ->current_file -= 1;
-                this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
+                index -= 1;
+                this->file.open(levelfiles[i].fileNames[index], std::ios::in | std::ios::out);
+                }
+
             }
         }
+        
+        // this->current_file = 1;
+        // this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
+        // for(int i = 0 ; i < 4 ; i++){ // look into level 1
+        //     load_data_file(fileNames[this->current_file]) ;
+        //     result = table.count(key);
+        
+        //     if(result){
+        //         std::cout << "Value was found in memory in file " << fileNames[this->current_file] << std::endl;
+        //         return (table[key].visible) ? table[key] : Value(false);
+        //     }
+        //     if(count >= 2){
+        //         count = 0;
+        //         this->file.close();
+        //         this->current_file -= 1;
+        //         this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
+        //     }
+        // }
+
+        // this->file.close();
+        // this->current_file = 5;
+        // this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
+        // for(int i = 0 ; i < 16 ; i++){ // look into level 2
+        //     load_data_file(fileNames[this->current_file]) ;
+        //     result = table.count(key);
+        
+        //     if(result){
+        //         return (table[key].visible) ? table[key] : Value(false);
+        //     }
+        //     if(count >= 4){
+        //         count = 0;
+        //         this->file.close();
+        //         this ->current_file -= 1;
+        //         this->file.open(fileNames[this->current_file], std::ios::in | std::ios::out);
+        //     }
+        // }
     }
 
     std::cout << "closing file" << std::endl;
    // this->file.close();
     std::cout << "reassigning current_file file to 0" << std::endl;
-    this->current_file = 0;
     std::cout << "reassigned current_file file to 0" << std::endl;
     return Value(false);
 }
@@ -184,7 +213,8 @@ void DB::del(int key)
     }
     else{
         delete_key.visible = false;
-        table.insert({key, delete_key});
+        //table.insert({key, delete_key});
+        put(key, delete_key);
     }
 
      std::cout << "key value " << std::to_string(key) << " is exists if the following value is 1: " << std::to_string(table.count(key)) << std::endl; 
@@ -210,7 +240,8 @@ void DB::del(int min_key, int max_key) // complete?
         }
         else{
             delete_key.visible = false;
-            table.insert({key, delete_key});
+            //table.insert({key, delete_key});
+            put(key, delete_key);
         }
 
         key += 1;
@@ -337,7 +368,8 @@ bool DB::load_data_file(std::string & fname) // correct this to recognize tombst
 
 bool DB::close() 
 {
-    for(auto file_check: this->fileNames)
+    for(int i = 0; i < levelfiles.size; i++){
+    for(auto file_check: levelfiles[i].fileNames)
     {
        this->file.open(file_check, std::ios::in | std::ios::out);
         if (file.is_open())
@@ -346,6 +378,7 @@ bool DB::close()
             file.close();
         }
         //this->status = CLOSED;
+    }
     }
     return true;
 }

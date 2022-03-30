@@ -38,6 +38,13 @@ public:
     }
 };
 
+class Levels
+{
+ public:
+    int size;
+    std::vector<std::string> fileNames;
+    int fileSize;
+};
 
 class DB
 {
