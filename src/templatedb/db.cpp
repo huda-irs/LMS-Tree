@@ -4,6 +4,7 @@
 
 using namespace templatedb;
 
+// tunable parameters: size ratio, choosing between tiering and leveling
 void DB::newfiles() // defining construct to assign values to intialize table and create our file system
 { 
     std::string L1_0, L1_1;
@@ -72,12 +73,18 @@ void DB::newfiles() // defining construct to assign values to intialize table an
     Levels level1;
     Levels level2;
     level1.numFiles = 2;
-    level1.fileNames.insert(level1.fileNames.end(),{L1_0, L1_1});
+    level1.fileNames.push_back(L1_0);
+    level1.fileNames.push_back(L1_1);
+    //level1.fileNames.insert(level1.fileNames.end(),{L1_0, L1_1});
     level1.fileSize = 100;
     levelfiles.push_back(level1);
 
     level2.numFiles = 4;
-    level2.fileNames.insert(level2.fileNames.end(),{L2_0, L2_1, L2_2, L2_3});
+    //level2.fileNames.insert(level2.fileNames.end(),{L2_0, L2_1, L2_2, L2_3});
+    level2.fileNames.push_back(L2_0);
+    level2.fileNames.push_back(L2_1);
+    level2.fileNames.push_back(L2_2);
+    level2.fileNames.push_back(L2_3);
     level2.fileSize = 200;
     levelfiles.push_back(level2);
 
@@ -221,9 +228,12 @@ void DB::del(int key)
 
     bool exisit = table.count(key); // check if this value exisists in memtable
     Value delete_key;
+    delete_key.items.push_back(0);
     if(exisit){
         std::cout << "key value " << std::to_string(key) << " exists in the memetable" << std::endl; 
-        table.erase(key);
+        //table.erase(key);
+        delete_key.visible = false;
+        table[key] = delete_key;
     }
     else{
         delete_key.visible = false;
@@ -249,11 +259,13 @@ void DB::del(int min_key, int max_key) // complete?
         Value delete_key;
         if(exisit){
             delete_key = table[key];
+            //delete_key.items.push_back(0);
             delete_key.visible = false;
             table[key] = delete_key;
         }
         else{
             delete_key.visible = false;
+            //delete_key.items.push_back(0);
             //table.insert({key, delete_key});
             put(key, delete_key);
         }
@@ -400,7 +412,7 @@ bool DB::close()
 
 bool DB::write_to_file() // implement teiring
 {   std::cout << "writing to file" << std::endl;
-
+	
 	 // determine min max keys from memtable
     int min_key = table.begin()->first;
     int max_key = table.begin()->first;
@@ -413,10 +425,12 @@ bool DB::write_to_file() // implement teiring
         }
     }
       // end of finding min max of keys from memtable 
-
+    std::cout << "1" << std::endl;
     int numelm;
     std::string line;
-	for(int i = levelfiles[0].numFiles -1; i < 0; i --){
+    std::cout << "1" << std::endl;
+	for(int i = levelfiles[0].numFiles -1; i > -1; i --){
+		std::cout << levelfiles[0].fileNames[i] << std::endl;
     	this->file.open(levelfiles[0].fileNames[i], std::ios::in | std::ios::out);
       	std::cout << " opened file to write into" << std::endl;
 
@@ -425,7 +439,7 @@ bool DB::write_to_file() // implement teiring
 		if (file.peek() == std::ifstream::traits_type::eof())
 	            {;} // figure out what to do with this later
 
-	    int numelm;
+	    // int numelm;
 	    std::getline(file, line); // First line is rows, col
     
 	    if(line.empty()){
@@ -433,24 +447,33 @@ bool DB::write_to_file() // implement teiring
 	    //	std::cout << "file is null\n" << std::endl;
 	    	return false;
 	    }
-
+	    std::cout << "2" << std::endl;
 	    //std::getline(linestream, item, ',');
 	    std::string item = line.substr(0, line.find(','));
+	    std::cout << "about to convert items as numelm" << std::endl;
 	    numelm = std::stoi(item);
-
-	    if(numelm == 0  && i != 0){
+	    std::cout << "converted items as numelm which is" << std::to_string(numelm)<< std::endl;
+	    if(numelm == 0  && i != 0){ // we can write in file but not the oldest file so lets check the previous file first
+	    	std::cout << "first" << std::endl;
+	    	file.close();
 	    	continue;
 	    }
-	    else if(numelm == 0  && i == 0){
+	    else if(numelm == 0  && i == 0){ // empty for oldest file and can write
+	    	std::cout << "second" << std::endl;
 	    	break;
 	    }
 	    else if(numelm != 0 && numelm + table.size() <= levelfiles[1].fileSize){
-	    	continue;
+	    	std::cout << "third" << std::endl;
+	    	//file.close();
+	    	//continue;
+	    	break; 
 	    }
 	    else if(numelm != 0 && numelm + table.size() >= levelfiles[1].fileSize && i ==  levelfiles[0].numFiles -1 ){
+	    	std::cout << "fourth" << std::endl;
 	    	//do compaction
 	    }
 	    else if(numelm != 0 && numelm + table.size() >= levelfiles[1].fileSize && i < levelfiles[0].numFiles -1 ){
+	    	std::cout << "fifth" << std::endl;
 	    	this->file.close();
 	    	this->file.open(levelfiles[0].fileNames[i+1], std::ios::in | std::ios::out);
 	    	file.seekg(0, std::ios::beg);
@@ -468,16 +491,25 @@ bool DB::write_to_file() // implement teiring
 
 		    //std::getline(linestream, item, ',');
 		    std::string item = line.substr(0, line.find(','));
+		    std::cout << "about to convert items as numelm for level 1" << std::endl;
 		    numelm = std::stoi(item);
+		    std::cout << "converted items as numelm for level 1" <<  std::endl;
 	    }
+
 
 	}
 
+
     std::string rest = line.substr(line.find(',')+1);
+
     rest =  rest.substr(rest.find(',')+1); // gets us to min key
+
     int mink = std::stoi(rest.substr(0, rest.find(',') ));
+
     rest =  rest.substr(rest.find(',')+1); // gets us to max key
+
     int maxk = (std::stoi(rest));
+
     //std::cout << "mink=" << std::to_string(mink) << std::endl;
     //std::cout << "maxk=" << std::to_string(maxk) << std::endl;
     if(maxk< max_key || maxk == -1){
@@ -504,16 +536,16 @@ bool DB::write_to_file() // implement teiring
     //     return result;
 
     // }
+
     file.seekg(0, std::ios::end);
     for(auto item: table)
-    {
+    {	
+    	std::cout << std::to_string(item.first) << std::endl;
         std::ostringstream line;
         std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
         line << item.second.items.back();
         std::string value(line.str());
-        //file << item.first << ',' << value << '\n';
-
-         file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
+        file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
 
     }
 
