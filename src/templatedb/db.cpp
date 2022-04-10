@@ -68,16 +68,26 @@ void DB::newfiles() // defining construct to assign values to intialize table an
 
     std::cout<< "hello\n";
 
-    // this->current_file = 0;
-    
-    //std::vector<Levels> levelfiles[2];
-    levelfiles[2];
-    levelfiles[0].numFiles = 2;
-    levelfiles[0].fileNames.insert(levelfiles[0].fileNames.end(),{L1_0, L1_1});
-    levelfiles[0].fileSize = 100;
-    levelfiles[1].numFiles = 4;
-    levelfiles[1].fileNames.insert(levelfiles[1].fileNames.end(),{L2_0, L2_1, L2_2, L2_3});
-    levelfiles[1].fileSize = 200;
+    //this->current_file = 0;
+    Levels level1;
+    Levels level2;
+    level1.numFiles = 2;
+    level1.fileNames.insert(level1.fileNames.end(),{L1_0, L1_1});
+    level1.fileSize = 100;
+    levelfiles.push_back(level1);
+
+    level2.numFiles = 4;
+    level2.fileNames.insert(level2.fileNames.end(),{L2_0, L2_1, L2_2, L2_3});
+    level2.fileSize = 200;
+    levelfiles.push_back(level2);
+
+    // levelfiles[2];
+    // levelfiles[0].numFiles = 2;
+    // levelfiles[0].fileNames.insert(levelfiles[0].fileNames.end(),{L1_0, L1_1});
+    // levelfiles[0].fileSize = 100;
+    // levelfiles[1].numFiles = 4;
+    // levelfiles[1].fileNames.insert(levelfiles[1].fileNames.end(),{L2_0, L2_1, L2_2, L2_3});
+    // levelfiles[1].fileSize = 200;
 }
 
 Value DB::get(int key) // be able to read from files to get the value we need if not in memtable
