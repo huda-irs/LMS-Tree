@@ -44,9 +44,8 @@ class Levels
     int numFiles;
     std::vector<std::string> fileNames;
     int fileSize;
-    Levels(int _numFiles, int _fileSize){}
-
-    void insert(std::string fileName){fileNames.push_back(fileName);}
+    int numFilesCap;
+    Levels(){}
 };
 
 class DB
@@ -80,6 +79,8 @@ private:
     size_t value_dimensions = 0;
     
     bool write_to_file();
+    void levelingComp();
+    void teringComp();
     //std::vector<std::string> fileNames;
     //int current_file;
 };
