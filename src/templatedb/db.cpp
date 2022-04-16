@@ -3,10 +3,8 @@
 #include "db.hpp"
 #include <iostream>
 #include <fstream> 
-#include <cmath>
 
 using namespace templatedb;
-int tablesize = 100;
 
 // tunable parameters: size ratio, choosing between tiering and leveling
 void DB::newfiles() // defining construct to assign values to intialize table and create our file system
@@ -119,7 +117,7 @@ Value DB::get(int key) // be able to read from files to get the value we need if
         for(int i = 0; i < levelfiles.size(); i++){
             int index = levelfiles[i].numFiles-1;
             this->file.open(levelfiles[i].fileNames[index], std::ios::in | std::ios::out);
-            for(int j = levelfiles[i].numFiles * (levelfiles[i].fileSize/tablesize); j < 0; j--){
+            for(int j = levelfiles[i].numFiles * (levelfiles[i].fileSize/50); j < 0; j--){
                 load_data_file(levelfiles[i].fileNames[index]);
                 result = table.count(key);
 
@@ -128,7 +126,7 @@ Value DB::get(int key) // be able to read from files to get the value we need if
                     return (table[key].visible) ? table[key] : Value(false);
                 }
 
-                if(count >= levelfiles[i].fileSize/tablesize){
+                if(count >= levelfiles[i].fileSize/50){
                 count = 0;
                 this->file.close();
                 index -= 1;
@@ -187,7 +185,7 @@ Value DB::get(int key) // be able to read from files to get the value we need if
 void DB::put(int key, Value val) // complete?
 {
 
-    if(table.size()<tablesize){
+    if(table.size()<50){
 
         table.insert({key,val});
 
@@ -493,30 +491,30 @@ bool DB::write_to_file() // implement teiring
 	// }
 
 
-    // std::string rest = line.substr(line.find(',')+1);
+    std::string rest = line.substr(line.find(',')+1);
 
-    // rest =  rest.substr(rest.find(',')+1); // gets us to min key
+    rest =  rest.substr(rest.find(',')+1); // gets us to min key
 
-    // int mink = std::stoi(rest.substr(0, rest.find(',') ));
+    int mink = std::stoi(rest.substr(0, rest.find(',') ));
 
-    // rest =  rest.substr(rest.find(',')+1); // gets us to max key
+    rest =  rest.substr(rest.find(',')+1); // gets us to max key
 
-    // int maxk = (std::stoi(rest));
+    int maxk = (std::stoi(rest));
 
-    // //std::cout << "mink=" << std::to_string(mink) << std::endl;
-    // //std::cout << "maxk=" << std::to_string(maxk) << std::endl;
-    // if(maxk< max_key || maxk == -1){
-    //     maxk = max_key;
-    // }
-    // if(mink > min_key || mink == -1){
-    //     mink = min_key;
-    // }
+    //std::cout << "mink=" << std::to_string(mink) << std::endl;
+    //std::cout << "maxk=" << std::to_string(maxk) << std::endl;
+    if(maxk< max_key || maxk == -1){
+        maxk = max_key;
+    }
+    if(mink > min_key || mink == -1){
+        mink = min_key;
+    }
 
-    // //if(numelm  < 100){
+    //if(numelm  < 100){
 
-	// std::string header = std::to_string(table.size() + numelm) + ',' + std::to_string(value_dimensions) + ',' + std::to_string(mink) + ',' + std::to_string(maxk)+ '\n' ;
-	// file.seekg(0, std::ios::beg);
-	// file << header;
+	std::string header = std::to_string(table.size() + numelm) + ',' + std::to_string(value_dimensions) + ',' + std::to_string(mink) + ',' + std::to_string(maxk)+ '\n' ;
+	file.seekg(0, std::ios::beg);
+	file << header;
 
 	//}
     // else{
@@ -530,98 +528,50 @@ bool DB::write_to_file() // implement teiring
 
     // }
 
-    // file.seekg(0, std::ios::end);
-    // for(auto item: table)
-    // {	
-    // 	std::cout << std::to_string(item.first) << std::endl;
-    //     std::ostringstream line;
-    //     std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
-    //     line << item.second.items.back();
-    //     std::string value(line.str());
-    //     file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
+    file.seekg(0, std::ios::end);
+    for(auto item: table)
+    {	
+    	std::cout << std::to_string(item.first) << std::endl;
+        std::ostringstream line;
+        std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
+        line << item.second.items.back();
+        std::string value(line.str());
+        file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
 
-    // }
+    }
 
-    // this->file.close();
-    // //this ->current_file = 0;
+    this->file.close();
+    //this ->current_file = 0;
 
     return true;
 }
 
 
 bool DB::write_to_file(int levelCheck){
-  	if(levelfiles.size() < levelCheck){
+
+	if(levelfiles.size() < levelCheck){
 		Levels lev;
 		lev.numFiles = 0;
-		lev.fileSize = tablesize; // size of memtable since each run will be considered the size of memtable
-		lev.numFilesCap = pow(4,(levelCheck-1));
+		lev.fileSize = 50; // size of memtable since each run will be considered the size of memtable
+		lev.numFilesCap = 4^(levelCheck);
 		levelfiles.push_back(lev);
 
     }
+
 	if(levelfiles[levelCheck-1].numFiles >= levelfiles[levelCheck-1].numFilesCap){
-		write_to_file(levelCheck +1);
+		write(levelCheck +1);
 	}
 	else{
 		// create new sstable for that level
-		std::string newfile = "L" + std::to_string(levelCheck-1) + "SST" + std::to_string(levelfiles[levelCheck-1].numFiles);
-        levelfiles[0].fileNames.insert(levelfiles[0].fileNames.end(),{newfile});
-        // levelfiles[0].fileNames.push_back();
-        levelfiles[levelCheck-1].numFiles += 1;
-        // levelfiles[0].fileSize = 100;
-        std::ifstream fid0(newfile);
-        if (!fid0.is_open()){
-            std::ofstream levelingFile(newfile);
-            levelingFile << "0,0,-1,-1";
-            levelingFile.close();
-        }
-        std::cout<< std::to_string(levelfiles[0].fileSize) << "SST Created\n";
+		levelfiles[levelCheck-1].numFiles += 1;
+		std::string newfile = "L" + std::to_string(levelCheck) + "SST" + std::to_string(numFiles-1);
 		this->file.open(newfile); 
-        std::cout << " opened file to write into" << std::endl;
 	}
-	if(levelCheck == 1){ // LevelCheck 1 correlates with L0 (levelCheck-1==0)
-        std::string line;
-        std::getline(file, line); // First line is rows, col
-        std::string item = line.substr(0, line.find(','));
-        std::cout << "about to convert items as numelm" << std::endl;
-        int numelm;
-        numelm = std::stoi(item);
-        std::cout << "converted items as numelm which is" << std::to_string(numelm)<< std::endl;
-        std::string rest = line.substr(line.find(',')+1);
-        
-
-       
-        rest =  rest.substr(rest.find(',')+1); // gets us to min key
-        int mink = std::stoi(rest.substr(0, rest.find(',') ));
-        rest =  rest.substr(rest.find(',')+1); // gets us to max key
-        int maxk = (std::stoi(rest));
-        std::cout << "mink=" << std::to_string(mink) << std::endl;
-        std::cout << "maxk=" << std::to_string(maxk) << std::endl;
-        // Where is the max_key??
-        // if(maxk< max_key || maxk == -1){
-        //     maxk = max_key;
-        // }
-        // if(mink > min_key || mink == -1){
-        //     mink = min_key;
-        // }
- 
-        std::string header = std::to_string(table.size() + numelm) + ',' + std::to_string(value_dimensions) + ',' + std::to_string(mink) + ',' + std::to_string(maxk)+ '\n' ;
-        file.seekg(0, std::ios::beg);
-        file << header;
-        file.seekg(0, std::ios::end);
-        for(auto item: table)
-        {	
-            // std::cout << std::to_string(item.first) << std::endl;
-            std::ostringstream line;
-            std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
-            line << item.second.items.back();
-            std::string value(line.str());
-            file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
-
-        }
-        this->file.close();
-        return true;
+	if(levelCheck == 1){
+		return;
+        	// sort and write
     }
-    else{ // sort as part of mergig
+    else{
 
     	//if(tunanle vairable){
     	// leveling
@@ -631,16 +581,15 @@ bool DB::write_to_file(int levelCheck){
     	//}	
     
         //compaction
-        std::cout << "L1 reached" << std::endl;
-    	return false;
+    	
     }
 }
 
-// void DB::levlingComp(){
+void DB::levlingComp(){
 
-// }
+}
 
 
-// void DB::teiringComp(){
+void DB::teiringComp(){
 
-// }
+}
