@@ -79,6 +79,7 @@ private:
     size_t value_dimensions = 0;
     
     bool write_to_file();
+    bool write_to_file(int levelcheck);
     void levelingComp();
     void teringComp();
     //std::vector<std::string> fileNames;
