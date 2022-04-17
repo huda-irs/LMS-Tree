@@ -185,7 +185,6 @@ Value DB::get(int key) // be able to read from files to get the value we need if
     return Value(false);
 }
 
-
 void DB::put(int key, Value val) // complete?
 {
 
@@ -581,55 +580,106 @@ bool DB::write_to_file(int levelCheck){
         std::cout << " opened file to write into" << std::endl;
 	}
 
-	if(levelCheck == 1 && tiering){ // LevelCheck 1 correlates with L0 (levelCheck-1==0)
-        // std::string line;
-        // std::getline(file, line); // First line is rows, col
-        // std::string item = line.substr(0, line.find(','));
-        // std::cout << line << std::endl;
-        // std::cout << "about to convert items as numelm" << std::endl;
-        // int numelm;
-        // numelm = std::stoi(item);
-        // std::cout << "converted items as numelm which is " << std::to_string(numelm)<< std::endl;
-        // std::string rest = line.substr(line.find(',')+1);
-        
-        // rest =  rest.substr(rest.find(',')+1); // gets us to min key
-        // int mink = std::stoi(rest.substr(0, rest.find(',') ));
-        // rest =  rest.substr(rest.find(',')+1); // gets us to max key
-        // int maxk = (std::stoi(rest));
-        // std::cout << "mink=" << std::to_string(mink) << std::endl;
-        // std::cout << "maxk=" << std::to_string(maxk) << std::endl;
+	if(tiering){ // LevelCheck 1 correlates with L0 (levelCheck-1==0)
+        std::cout << "level check is " << std::to_string(levelCheck) << std::endl;
+        if(levelCheck == 1){
+            std::string header = std::to_string(table.size()) + ',' + std::to_string(table[table.begin()->first].items.size()) + ',' + std::to_string(table.begin()->first) + ',' + std::to_string(table.rbegin()->first)+ '\n' ;
+            file.seekg(0, std::ios::beg);
+            file << header;
+            file.seekg(0, std::ios::end);
+            for(auto item: table)
+            {	
+                std::ostringstream line;
+                std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
+                line << item.second.items.back();
+                std::string value(line.str());
+                file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
 
-
-        // Where is the max_key??
-        // if(maxk< max_key || maxk == -1){
-        //     maxk = max_key;
-        // }
-        // if(mink > min_key || mink == -1){
-        //     mink = min_key;
-        // }
-
-        // std::cout << table[table.begin()->first].items.size() << std::endl;
-        // std::cout << table.begin()->first << std::endl;
-        // std::cout << table.rbegin()->first << std::endl;
-        std::string header = std::to_string(table.size()) + ',' + std::to_string(table[table.begin()->first].items.size()) + ',' + std::to_string(table.begin()->first) + ',' + std::to_string(table.rbegin()->first)+ '\n' ;
-        file.seekg(0, std::ios::beg);
-        file << header;
-        file.seekg(0, std::ios::end);
-        for(auto item: table)
-        {	
-            // std::cout << std::to_string(item.first) << std::endl;
-            std::ostringstream line;
-            std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
-            line << item.second.items.back();
-            std::string value(line.str());
-            file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
-
+            }
+            this->file.close();
+            
         }
-        this->file.close();
+        else{
+            std::cout << "reached else statement" << std::endl;
+            for(auto levelFile: levelfiles[levelCheck-2].fileNames){
+                this->file.open(levelFile);
+                std::ifstream fid(levelFile);
+                std::cout << std::to_string(fid.is_open()) << std::endl;
+                if (fid.is_open())
+                {
+                    int key;
+                    int line_num = 0;
+                    std::string line;
+                    std::getline(fid, line); // First line is rows, dim, minkey, maxkey
+                    while (std::getline(fid, line))
+                    {
+                        line_num++;
+                        std::stringstream linestream(line);
+                        std::string item;
+
+                        std::getline(linestream, item, ' ');
+
+                        key = stoi(item);
+                        std::vector<int> items;
+                        while(std::getline(linestream, item, ' '))
+                        {
+                            items.push_back(stoi(item));
+                        }
+                        mainMemBuffer.insert({key, Value(items)});
+                        std::cout << "key = " << std::to_string(key) << std::endl;
+                        //std::cout << "mainmembuffer stuff = " << std::to_string(mainMemBuffer.begin()->second) << std::endl;
+                    }
+                }
+                // else
+                // {
+                //     fprintf(stderr, "Unable to read %s\n", fname.c_str());
+                //     return false;
+                // }
+                
+            }
+            
+        }
+    //    for(auto item: mainMemBuffer)
+    //         {	
+    //             std::ostringstream line;
+    //             std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
+    //             line << item.second.items.back();
+    //             std::string value(line.str());
+    //             std::cout << "the one" << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
+
+    //         }
+        std::string newfile = "mainmemtest";
+        std::ifstream fid0(newfile);
+        if (!fid0.is_open()){
+            std::ofstream levelingFile(newfile);
+            levelingFile << "0,0,-1,-1";
+            levelingFile.close();
+        }
+        std::cout << " Test File Created\n";
+		this->file.open(newfile);
+        std::string header = "we're stressed";
+            file.seekg(0, std::ios::beg);
+            file << header;
+            file.seekg(0, std::ios::end);
+            for(auto item: mainMemBuffer)
+            {	
+                std::ostringstream line;
+                std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
+                line << item.second.items.back();
+                std::string value(line.str());
+                file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
+
+            }
+            this->file.close();
         return true;
     }
-    else{ // sort as part of merging
+    else{ // this is leveling
+        if(levelCheck == 1){
 
+        }
+        else{
+
+        }
     	//if(tunable vairable){
     	// leveling
     	//}
@@ -661,7 +711,6 @@ bool DB::write_to_file(int levelCheck){
     // 3. flushing data//
     //levelfiles.filename <= insert data that now exists from mainMemBuffer
 
-    
     
     // sort that data by key in ascending order
     // find min max key

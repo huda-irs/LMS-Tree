@@ -78,6 +78,7 @@ private:
     //std::unordered_map<int, bool, Value> table; // want to modify this to add tombstone
     //std::unordered_map<int,Value> table;
     std::map<int,Value> table;
+    std::map<int, Value> mainMemBuffer;
     size_t value_dimensions = 0;
     
     bool write_to_file();
