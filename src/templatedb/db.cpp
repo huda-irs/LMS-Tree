@@ -9,6 +9,7 @@ using namespace templatedb;
 int tablesize = 100;
 bool tiering = true;
 
+
 // tunable parameters: size ratio, choosing between tiering and leveling
 void DB::newfiles() // defining construct to assign values to intialize table and create our file system
 { 
@@ -576,12 +577,13 @@ bool DB::write_to_file(int levelCheck){
             levelingFile << "0,0,-1,-1";
             levelingFile.close();
         }
-         
-        std::cout<< std::to_string(levelfiles[0].fileSize) << "SST Created\n";
-		this->file.open(newfile); 
+        std::cout<< std::to_string(levelfiles[levelCheck-1].numFiles) << " SST Created\n";
+		this->file.open(newfile); // the reason we write directly into level 2, bc it was the last file opened
+        std::cout << "creating this file " << newfile << std::endl;
         std::cout << " opened file to write into" << std::endl;
 	}
-	if(levelCheck == 1){ // LevelCheck 1 correlates with L0 (levelCheck-1==0)
+
+	if(levelCheck == 1 && tiering){ // LevelCheck 1 correlates with L0 (levelCheck-1==0)
         // std::string line;
         // std::getline(file, line); // First line is rows, col
         // std::string item = line.substr(0, line.find(','));
@@ -599,7 +601,7 @@ bool DB::write_to_file(int levelCheck){
         // std::cout << "mink=" << std::to_string(mink) << std::endl;
         // std::cout << "maxk=" << std::to_string(maxk) << std::endl;
 
-        
+
         // Where is the max_key??
         // if(maxk< max_key || maxk == -1){
         //     maxk = max_key;
@@ -630,24 +632,24 @@ bool DB::write_to_file(int levelCheck){
     }
     else{ // sort as part of merging
 
-    	//if(tunanle vairable){
+    	//if(tunable vairable){
     	// leveling
     	//}
     	//else{
-    	//  tering
+    	//  tiering
     	//}	
     
         //compaction
-        std::cout << "L1 reached" << std::endl;
+        std::cout << "error" << std::endl;
     	return false;
     }
 }
 
-// void DB::levlingComp(){
+// void DB::levelingComp(){
 
 // }
 
 
-// void DB::teiringComp(){
+// void DB::tieringComp(){
 
 // }
