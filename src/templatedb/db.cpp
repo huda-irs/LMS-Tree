@@ -190,16 +190,13 @@ void DB::put(int key, Value val) // complete?
 {
 
     if(table.size()<tablesize){
-
         table.insert({key,val});
-
     }
     else{
-
     	write_to_file();
     	table.clear();
-    	std::cout << "writen to file\n";
-
+    	std::cout << "written to file\n";
+        table.insert({key,val});
     }
 }
 
@@ -401,14 +398,15 @@ bool DB::load_data_file(std::string & fname) // correct this to recognize tombst
 
 
 bool DB::close() 
-{
+{   std::cout << "final size of table before closing is" << std::to_string(table.size() )<<std::endl;
+    write_to_file();
     for(int i = 0; i < levelfiles.size(); i++){
     for(auto file_check: levelfiles[i].fileNames)
     {
        this->file.open(file_check, std::ios::in | std::ios::out);
         if (file.is_open())
         {
-            this->write_to_file();
+            //this->write_to_file();
             file.close();
         }
         //this->status = CLOSED;
