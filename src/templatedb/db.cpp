@@ -7,6 +7,7 @@
 
 using namespace templatedb;
 int tablesize = 100;
+bool tiering = true;
 
 // tunable parameters: size ratio, choosing between tiering and leveling
 void DB::newfiles() // defining construct to assign values to intialize table and create our file system
@@ -579,23 +580,24 @@ bool DB::write_to_file(int levelCheck){
         std::cout << " opened file to write into" << std::endl;
 	}
 	if(levelCheck == 1){ // LevelCheck 1 correlates with L0 (levelCheck-1==0)
-        std::string line;
-        std::getline(file, line); // First line is rows, col
-        std::string item = line.substr(0, line.find(','));
-        std::cout << "about to convert items as numelm" << std::endl;
-        int numelm;
-        numelm = std::stoi(item);
-        std::cout << "converted items as numelm which is" << std::to_string(numelm)<< std::endl;
-        std::string rest = line.substr(line.find(',')+1);
+        // std::string line;
+        // std::getline(file, line); // First line is rows, col
+        // std::string item = line.substr(0, line.find(','));
+        // std::cout << line << std::endl;
+        // std::cout << "about to convert items as numelm" << std::endl;
+        // int numelm;
+        // numelm = std::stoi(item);
+        // std::cout << "converted items as numelm which is " << std::to_string(numelm)<< std::endl;
+        // std::string rest = line.substr(line.find(',')+1);
         
+        // rest =  rest.substr(rest.find(',')+1); // gets us to min key
+        // int mink = std::stoi(rest.substr(0, rest.find(',') ));
+        // rest =  rest.substr(rest.find(',')+1); // gets us to max key
+        // int maxk = (std::stoi(rest));
+        // std::cout << "mink=" << std::to_string(mink) << std::endl;
+        // std::cout << "maxk=" << std::to_string(maxk) << std::endl;
 
-       
-        rest =  rest.substr(rest.find(',')+1); // gets us to min key
-        int mink = std::stoi(rest.substr(0, rest.find(',') ));
-        rest =  rest.substr(rest.find(',')+1); // gets us to max key
-        int maxk = (std::stoi(rest));
-        std::cout << "mink=" << std::to_string(mink) << std::endl;
-        std::cout << "maxk=" << std::to_string(maxk) << std::endl;
+        
         // Where is the max_key??
         // if(maxk< max_key || maxk == -1){
         //     maxk = max_key;
@@ -603,8 +605,11 @@ bool DB::write_to_file(int levelCheck){
         // if(mink > min_key || mink == -1){
         //     mink = min_key;
         // }
- 
-        std::string header = std::to_string(table.size() + numelm) + ',' + std::to_string(value_dimensions) + ',' + std::to_string(mink) + ',' + std::to_string(maxk)+ '\n' ;
+
+        // std::cout << table[table.begin()->first].items.size() << std::endl;
+        // std::cout << table.begin()->first << std::endl;
+        // std::cout << table.rbegin()->first << std::endl;
+        std::string header = std::to_string(table.size()) + ',' + std::to_string(table[table.begin()->first].items.size()) + ',' + std::to_string(table.begin()->first) + ',' + std::to_string(table.rbegin()->first)+ '\n' ;
         file.seekg(0, std::ios::beg);
         file << header;
         file.seekg(0, std::ios::end);
@@ -621,7 +626,7 @@ bool DB::write_to_file(int levelCheck){
         this->file.close();
         return true;
     }
-    else{ // sort as part of mergig
+    else{ // sort as part of merging
 
     	//if(tunanle vairable){
     	// leveling
