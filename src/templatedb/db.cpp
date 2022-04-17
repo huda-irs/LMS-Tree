@@ -555,16 +555,17 @@ bool DB::write_to_file(int levelCheck){
 		Levels lev;
 		lev.numFiles = 0;
 		lev.fileSize = tablesize; // size of memtable since each run will be considered the size of memtable
-		lev.numFilesCap = pow(4,(levelCheck-1));
+		lev.numFilesCap = pow(4,(levelCheck));
 		levelfiles.push_back(lev);
 
     }
 	if(levelfiles[levelCheck-1].numFiles >= levelfiles[levelCheck-1].numFilesCap){
+        std::cout << "Reached new Level" << std::endl;
 		write_to_file(levelCheck +1);
 	}
 	else{
 		// create new sstable for that level
-		std::string newfile = "L" + std::to_string(levelCheck-1) + "SST" + std::to_string(levelfiles[levelCheck-1].numFiles);
+		std::string newfile = "L" + std::to_string(levelCheck) + "SST" + std::to_string(levelfiles[levelCheck-1].numFiles);
         levelfiles[0].fileNames.insert(levelfiles[0].fileNames.end(),{newfile});
         // levelfiles[0].fileNames.push_back();
         levelfiles[levelCheck-1].numFiles += 1;
@@ -575,6 +576,7 @@ bool DB::write_to_file(int levelCheck){
             levelingFile << "0,0,-1,-1";
             levelingFile.close();
         }
+         
         std::cout<< std::to_string(levelfiles[0].fileSize) << "SST Created\n";
 		this->file.open(newfile); 
         std::cout << " opened file to write into" << std::endl;
