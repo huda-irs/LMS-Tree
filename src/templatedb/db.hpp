@@ -83,7 +83,7 @@ private:
     bool write_to_file();
     bool write_to_file(int levelcheck);
     void levelingComp();
-    void teringComp();
+    void tieringComp();
     //std::vector<std::string> fileNames;
     //int current_file;
 };

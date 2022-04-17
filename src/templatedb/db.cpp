@@ -648,6 +648,24 @@ bool DB::write_to_file(int levelCheck){
 // }
 
 
-// void DB::tieringComp(){
+ void DB::tieringComp(){
+     std::cout<< "we have entered tiering" << std::endl;
+    // enter files 1-4 in a memory buffer (not our memtable)
+    // 1. access file //
+    // map mainMemBuffer
+    // for(looking through levelfiles.numfiles) // start with file 0 and increase
+    // 2. sorting as we enter in the data//
+    // mainMemBuffer.insert({key, values}) // per line of file for each file in ascending order 
+    //  because we have mapped table for MainMemBuffer we have our data sorted //
+    // everything below is after exisitng for loop//
+    // 3. flushing data//
+    //levelfiles.filename <= insert data that now exists from mainMemBuffer
 
-// }
+    
+    
+    // sort that data by key in ascending order
+    // find min max key
+    // remove duplicates
+    // write to the file
+    // continue
+    }
