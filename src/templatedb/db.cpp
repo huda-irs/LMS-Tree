@@ -421,129 +421,6 @@ bool DB::write_to_file() // implement teiring
 	 // determine min max keys from memtable
    
     write_to_file(1);
-	// for(int i = levelfiles[0].numFiles -1; i > -1; i --){
-	// 	std::cout << levelfiles[0].fileNames[i] << std::endl;
- //    	this->file.open(levelfiles[0].fileNames[i], std::ios::in | std::ios::out);
- //      	std::cout << " opened file to write into" << std::endl;
-
- //    	file.seekg(0, std::ios::beg);
-
-	// 	if (file.peek() == std::ifstream::traits_type::eof())
-	//             {;} // figure out what to do with this later
-
-	//     // int numelm;
-	//     std::getline(file, line); // First line is rows, col
-    
-	//     if(line.empty()){
-	//        // std::cout << "line says: " << line << std::endl;
-	//     //	std::cout << "file is null\n" << std::endl;
-	//     	return false;
-	//     }
-	//     std::cout << "2" << std::endl;
-	//     //std::getline(linestream, item, ',');
-	//     std::string item = line.substr(0, line.find(','));
-	//     std::cout << "about to convert items as numelm" << std::endl;
-	//     numelm = std::stoi(item);
-	//     std::cout << "converted items as numelm which is" << std::to_string(numelm)<< std::endl;
-	//     if(numelm == 0  && i != 0){ // we can write in file but not the oldest file so lets check the previous file first
-	//     	std::cout << "first" << std::endl;
-	//     	file.close();
-	//     	continue;
-	//     }
-	//     else if(numelm == 0  && i == 0){ // empty for oldest file and can write
-	//     	std::cout << "second" << std::endl;
-	//     	break;
-	//     }
-	//     else if(numelm != 0 && numelm + table.size() <= levelfiles[1].fileSize){
-	//     	std::cout << "third" << std::endl;
-	//     	//file.close();
-	//     	//continue;
-	//     	break; 
-	//     }
-	//     else if(numelm != 0 && numelm + table.size() >= levelfiles[1].fileSize && i ==  levelfiles[0].numFiles -1 ){
-	//     	std::cout << "fourth" << std::endl;
-	//     	//do compaction
-	//     }
-	//     else if(numelm != 0 && numelm + table.size() >= levelfiles[1].fileSize && i < levelfiles[0].numFiles -1 ){
-	//     	std::cout << "fifth" << std::endl;
-	//     	this->file.close();
-	//     	this->file.open(levelfiles[0].fileNames[i+1], std::ios::in | std::ios::out);
-	//     	file.seekg(0, std::ios::beg);
-
-	// 		if (file.peek() == std::ifstream::traits_type::eof())
-	//             {;} // figure out what to do with this later
-
-	// 	    std::getline(file, line); // First line is rows, col
-	    
-	// 	    if(line.empty()){
-	// 	       // std::cout << "line says: " << line << std::endl;
-	// 	    //	std::cout << "file is null\n" << std::endl;
-	// 	    	return false;
-	// 	    }
-
-	// 	    //std::getline(linestream, item, ',');
-	// 	    std::string item = line.substr(0, line.find(','));
-	// 	    std::cout << "about to convert items as numelm for level 1" << std::endl;
-	// 	    numelm = std::stoi(item);
-	// 	    std::cout << "converted items as numelm for level 1" <<  std::endl;
-	//     }
-
-
-	// }
-
-
-    // std::string rest = line.substr(line.find(',')+1);
-
-    // rest =  rest.substr(rest.find(',')+1); // gets us to min key
-
-    // int mink = std::stoi(rest.substr(0, rest.find(',') ));
-
-    // rest =  rest.substr(rest.find(',')+1); // gets us to max key
-
-    // int maxk = (std::stoi(rest));
-
-    // //std::cout << "mink=" << std::to_string(mink) << std::endl;
-    // //std::cout << "maxk=" << std::to_string(maxk) << std::endl;
-    // if(maxk< max_key || maxk == -1){
-    //     maxk = max_key;
-    // }
-    // if(mink > min_key || mink == -1){
-    //     mink = min_key;
-    // }
-
-    // //if(numelm  < 100){
-
-	// std::string header = std::to_string(table.size() + numelm) + ',' + std::to_string(value_dimensions) + ',' + std::to_string(mink) + ',' + std::to_string(maxk)+ '\n' ;
-	// file.seekg(0, std::ios::beg);
-	// file << header;
-
-	//}
-    // else{
-    //     this->file.close();
-    //     this->current_file = this->current_file+1;
-    //     bool result= write_to_file();
-    //     //table.clear();
-    //     //std::cout << "written to file\n";
-    //     this->file.close();
-    //     return result;
-
-    // }
-
-    // file.seekg(0, std::ios::end);
-    // for(auto item: table)
-    // {	
-    // 	std::cout << std::to_string(item.first) << std::endl;
-    //     std::ostringstream line;
-    //     std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
-    //     line << item.second.items.back();
-    //     std::string value(line.str());
-    //     file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
-
-    // }
-
-    // this->file.close();
-    // //this ->current_file = 0;
-
     return true;
 }
 
@@ -560,6 +437,22 @@ bool DB::write_to_file(int levelCheck){
 	if(levelfiles[levelCheck-1].numFiles >= levelfiles[levelCheck-1].numFilesCap){
         std::cout << "Reached new Level" << std::endl;
 		write_to_file(levelCheck +1);
+        if(levelfiles[levelCheck-1].numFiles == 0){
+            // create new sstable for that level
+		    std::string newfile = "L" + std::to_string(levelCheck) + "SST" + std::to_string(levelfiles[levelCheck-1].numFiles);
+            levelfiles[levelCheck-1].fileNames.insert(levelfiles[levelCheck-1].fileNames.end(),{newfile});
+            // levelfiles[0].fileNames.push_back();
+            levelfiles[levelCheck-1].numFiles += 1;
+            // levelfiles[0].fileSize = 100;
+            std::ifstream fid0(newfile);
+            if (!fid0.is_open()){
+                std::ofstream levelingFile(newfile);
+                levelingFile << "0,0,-1,-1";
+                levelingFile.close();
+            }
+            std::cout<< std::to_string(levelfiles[levelCheck-1].numFiles) << " SST Created\n";
+		
+        }
 	}
 	else{
 		// create new sstable for that level
@@ -631,15 +524,6 @@ bool DB::write_to_file(int levelCheck){
             }
         std::string newfile = levelfiles[levelCheck-1].fileNames[ (levelfiles[levelCheck-1].numFiles)-1];// "L" + std::to_string(levelCheck) + "SST" + std::to_string(levelfiles[levelCheck-1].numFiles);
         std::cout << newfile << std::endl;
-        // levelfiles[0].fileNames.push_back();
-        
-        // std::ifstream fid0(newfile);
-        // if (!fid0.is_open()){
-        //     std::ofstream levelingFile(newfile);
-        //     levelingFile << "0,0,-1,-1";
-        //     levelingFile.close();
-        // }
-        //std::ofstream levelingFile(newfile);
 		this->file.open(newfile);
         std::cout << std::to_string(mainMemBuffer.size()) << std::endl;
         std::string header =  std::to_string(mainMemBuffer.size()) + ',' + std::to_string(mainMemBuffer[mainMemBuffer.begin()->first].items.size()) + ',' + std::to_string(mainMemBuffer.begin()->first) + ',' + std::to_string(mainMemBuffer.rbegin()->first) + '\n';
