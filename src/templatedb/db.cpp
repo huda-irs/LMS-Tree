@@ -617,60 +617,53 @@ bool DB::write_to_file(int levelCheck){
                         std::stringstream linestream(line);
                         std::string item;
 
-                        std::getline(linestream, item, ' ');
+                        std::getline(linestream, item, ',');
 
                         key = stoi(item);
                         std::vector<int> items;
-                        while(std::getline(linestream, item, ' '))
+                        while(std::getline(linestream, item, ','))
                         {
                             items.push_back(stoi(item));
                         }
                         mainMemBuffer.insert({key, Value(items)});
-                        std::cout << "key = " << std::to_string(key) << std::endl;
-                        //std::cout << "mainmembuffer stuff = " << std::to_string(mainMemBuffer.begin()->second) << std::endl;
                     }
                 }
-                // else
-                // {
-                //     fprintf(stderr, "Unable to read %s\n", fname.c_str());
-                //     return false;
-                // }
                 
             }
             
         }
-    //    for(auto item: mainMemBuffer)
-    //         {	
-    //             std::ostringstream line;
-    //             std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
-    //             line << item.second.items.back();
-    //             std::string value(line.str());
-    //             std::cout << "the one" << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
-
-    //         }
-        std::string newfile = "mainmemtest";
-        std::ifstream fid0(newfile);
-        if (!fid0.is_open()){
-            std::ofstream levelingFile(newfile);
-            levelingFile << "0,0,-1,-1";
-            levelingFile.close();
-        }
-        std::cout << " Test File Created\n";
-		this->file.open(newfile);
-        std::string header = "we're stressed";
-            file.seekg(0, std::ios::beg);
-            file << header;
-            file.seekg(0, std::ios::end);
-            for(auto item: mainMemBuffer)
+       for(auto item: mainMemBuffer)
             {	
                 std::ostringstream line;
                 std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
                 line << item.second.items.back();
                 std::string value(line.str());
-                file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
+                std::cout << item.first << ',' <<  value  << '\n';
 
             }
-            this->file.close();
+        // std::string newfile = "mainmemtest";
+        // std::ifstream fid0(newfile);
+        // if (!fid0.is_open()){
+        //     std::ofstream levelingFile(newfile);
+        //     levelingFile << "0,0,-1,-1";
+        //     levelingFile.close();
+        // }
+        // std::cout << " Test File Created\n";
+		// this->file.open(newfile);
+        // std::string header = "we're stressed";
+        //     file.seekg(0, std::ios::beg);
+        //     file << header;
+        //     file.seekg(0, std::ios::end);
+        //     for(auto item: mainMemBuffer)
+        //     {	
+        //         std::ostringstream line;
+        //         std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
+        //         line << item.second.items.back();
+        //         std::string value(line.str());
+        //         file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
+
+        //     }
+        //     this->file.close();
         return true;
     }
     else{ // this is leveling
