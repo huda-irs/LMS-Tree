@@ -192,7 +192,7 @@ void DB::put(int key, Value val) // complete?
         table.insert({key,val});
     }
     else{
-    	write_to_file();
+    	write_to_file(); 
     	table.clear();
     	std::cout << "written to file\n";
         table.insert({key,val});
@@ -564,7 +564,7 @@ bool DB::write_to_file(int levelCheck){
 	else{
 		// create new sstable for that level
 		std::string newfile = "L" + std::to_string(levelCheck) + "SST" + std::to_string(levelfiles[levelCheck-1].numFiles);
-        levelfiles[0].fileNames.insert(levelfiles[0].fileNames.end(),{newfile});
+        levelfiles[levelCheck-1].fileNames.insert(levelfiles[levelCheck-1].fileNames.end(),{newfile});
         // levelfiles[0].fileNames.push_back();
         levelfiles[levelCheck-1].numFiles += 1;
         // levelfiles[0].fileSize = 100;
@@ -604,7 +604,6 @@ bool DB::write_to_file(int levelCheck){
             for(auto levelFile: levelfiles[levelCheck-2].fileNames){
                 this->file.open(levelFile);
                 std::ifstream fid(levelFile);
-                std::cout << std::to_string(fid.is_open()) << std::endl;
                 if (fid.is_open())
                 {
                     int key;
@@ -628,42 +627,44 @@ bool DB::write_to_file(int levelCheck){
                         mainMemBuffer.insert({key, Value(items)});
                     }
                 }
-                
+                file.close();
             }
-            
-        }
-       for(auto item: mainMemBuffer)
-            {	
-                std::ostringstream line;
-                std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
-                line << item.second.items.back();
-                std::string value(line.str());
-                std::cout << item.first << ',' <<  value  << '\n';
-
-            }
-        // std::string newfile = "mainmemtest";
+        std::string newfile = levelfiles[levelCheck-1].fileNames[ (levelfiles[levelCheck-1].numFiles)-1];// "L" + std::to_string(levelCheck) + "SST" + std::to_string(levelfiles[levelCheck-1].numFiles);
+        std::cout << newfile << std::endl;
+        // levelfiles[0].fileNames.push_back();
+        
         // std::ifstream fid0(newfile);
         // if (!fid0.is_open()){
         //     std::ofstream levelingFile(newfile);
         //     levelingFile << "0,0,-1,-1";
         //     levelingFile.close();
         // }
-        // std::cout << " Test File Created\n";
-		// this->file.open(newfile);
-        // std::string header = "we're stressed";
-        //     file.seekg(0, std::ios::beg);
-        //     file << header;
-        //     file.seekg(0, std::ios::end);
-        //     for(auto item: mainMemBuffer)
-        //     {	
-        //         std::ostringstream line;
-        //         std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
-        //         line << item.second.items.back();
-        //         std::string value(line.str());
-        //         file << item.first << ',' << std::to_string(item.second.visible)<< ',' <<  value  << '\n';
-
-        //     }
-        //     this->file.close();
+        //std::ofstream levelingFile(newfile);
+		this->file.open(newfile);
+        std::cout << std::to_string(mainMemBuffer.size()) << std::endl;
+        std::string header =  std::to_string(mainMemBuffer.size()) + ',' + std::to_string(mainMemBuffer[mainMemBuffer.begin()->first].items.size()) + ',' + std::to_string(mainMemBuffer.begin()->first) + ',' + std::to_string(mainMemBuffer.rbegin()->first) + '\n';
+        file.seekg(0, std::ios::beg);
+        file << header;
+        //levelingFile << header;
+        file.seekg(0, std::ios::end);
+        for (auto item : mainMemBuffer)
+        {
+            std::ostringstream line;
+            std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
+            line << item.second.items.back();
+            std::string value(line.str());
+            file << item.first << ',' << value << '\n';
+           // levelingFile <<  item.first << ',' << value << '\n';
+           
+        }
+         this->file.close();
+        //levelingFile.close();
+        for(auto levelFile: levelfiles[levelCheck-2].fileNames){
+            std::remove((levelFile).c_str());
+        }
+        levelfiles[levelCheck-2].numFiles = 0;
+        levelfiles[levelCheck-2].fileNames.clear();
+        } 
         return true;
     }
     else{ // this is leveling
