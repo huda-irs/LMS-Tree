@@ -7,7 +7,7 @@
 
 using namespace templatedb;
 int tablesize = 100;
-bool tiering = false;
+bool tiering = false; 
 
 // tunable parameters: size ratio, choosing between tiering and leveling
 void DB::newfiles() // defining construct to assign values to intialize table and create our file system
@@ -219,7 +219,7 @@ std::vector<Value> DB::scan() // be able to read from files to get the value we 
 
 std::vector<Value> DB::scan(int min_key, int max_key) // be able to read from files to get the value we need if not in memtable
 // OH: return how many values you found (in main method), return a vector of all the values
-{
+{  
     std::vector<Value> return_vector;
     for (auto pair : table)
     {
@@ -406,7 +406,7 @@ bool DB::write_to_file(int levelCheck)
             if (levelfiles[levelCheck - 1].numFiles == 0)
             {
                 // create new sstable for that level
-                std::string newfile = "L" + std::to_string(levelCheck) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+                std::string newfile = "L" + std::to_string(levelCheck-1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
                 levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
                 // levelfiles[0].fileNames.push_back();
                 levelfiles[levelCheck - 1].numFiles += 1;
@@ -427,7 +427,7 @@ bool DB::write_to_file(int levelCheck)
         else
         {
             // create new sstable for that level
-            std::string newfile = "L" + std::to_string(levelCheck) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+            std::string newfile = "L" + std::to_string(levelCheck-1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
             levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
             // levelfiles[0].fileNames.push_back();
             levelfiles[levelCheck - 1].numFiles += 1;
@@ -531,7 +531,7 @@ bool DB::write_to_file(int levelCheck)
         if (levelfiles[levelCheck - 1].numFiles == 0)
         {
             // create file
-            std::string newfile = "L" + std::to_string(levelCheck) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+            std::string newfile = "L" + std::to_string(levelCheck-1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
             levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
             levelfiles[levelCheck - 1].numFiles += 1;
             std::ifstream fid0(newfile);
@@ -577,7 +577,7 @@ bool DB::write_to_file(int levelCheck)
                 if (levelfiles[levelCheck - 1].numFiles == 0)
                 {
                     // create file
-                    std::string newfile = "L" + std::to_string(levelCheck) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+                    std::string newfile = "L" + std::to_string(levelCheck-1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
                     levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
                     levelfiles[levelCheck - 1].numFiles += 1;
                     std::ifstream fid0(newfile);
