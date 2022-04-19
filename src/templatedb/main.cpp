@@ -26,7 +26,7 @@ int main(){
 
    	std::vector<Operation> queries;
 
-   	queries = templatedb::Operation::ops_from_file("../../data/test_10000_3.data");
+   	queries = templatedb::Operation::ops_from_file("../../data/test_351_3.data");
 
    	cout << queries.size() << " is the number of operations we have\n";
 

@@ -434,6 +434,7 @@ bool DB::write_to_file(int levelCheck){
 		levelfiles.push_back(lev);
 
     }
+    std::cout << "Files already created:" << levelfiles[levelCheck-1].numFiles << std::endl;
 	if(levelfiles[levelCheck-1].numFiles >= levelfiles[levelCheck-1].numFilesCap){
         std::cout << "Reached new Level" << std::endl;
 		write_to_file(levelCheck +1);
@@ -451,7 +452,9 @@ bool DB::write_to_file(int levelCheck){
                 levelingFile.close();
             }
             std::cout<< std::to_string(levelfiles[levelCheck-1].numFiles) << " SST Created\n";
-		
+            this->file.open(newfile); // the reason we write directly into level 2, bc it was the last file opened
+            std::cout << "creating this file " << newfile << std::endl;
+            std::cout << " opened file to write into" << std::endl;
         }
 	}
 	else{
@@ -549,6 +552,7 @@ bool DB::write_to_file(int levelCheck){
         levelfiles[levelCheck-2].numFiles = 0;
         levelfiles[levelCheck-2].fileNames.clear();
         } 
+        mainMemBuffer.clear();
         return true;
     }
     else{ // this is leveling
