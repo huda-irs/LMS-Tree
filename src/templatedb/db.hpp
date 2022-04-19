@@ -57,7 +57,6 @@ public:
     DB() {};
     ~DB() {close();};
     std::vector<Levels> levelfiles ;
-    void newfiles();
     Value get(int key);
     void put(int key, Value val);
     std::vector<Value> scan();

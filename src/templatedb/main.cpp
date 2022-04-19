@@ -20,7 +20,6 @@ int main(){
 
     templatedb::DB test;
     cout<< "hello\n";
-    test.newfiles();
 
    	cout<< "check files were created\n";
 
@@ -35,7 +34,7 @@ int main(){
    	for(int i = 0; i < queries.size(); i++){
    		prefetchTable[i].items = queries[i].args;
    	}
-
+   
    	for(int i = 0; i < queries.size(); i++){
    		if(queries[i].type == 3){
    			test.put(queries[i].key, prefetchTable[i] );
