@@ -66,20 +66,25 @@ Value DB::get(int key) // be able to read from files to get the value we need if
                     file.close();
                     continue;
                 }
-                bool endFile = false;
-
+                //bool endFile = false;
+                std::vector<bool,int> endfile = {0,0};
                 // keep reading the file until we find the result or reached end of file
-                while (endFile == false)
+                while (endfile[0] == false)
                 {
-                    endFile = load_data_file(levelfiles[i].fileNames[index]);
+                    std::cout << "About to load file" << std::endl;
+                    endFile = load_data_file(levelfiles[i].fileNames[index], endfile[1]);
                     std::cout << "Loaded data from " << levelfiles[i].fileNames[index];
                     result = table.count(key);
-
+    
                     if (result)
                     {
+                        Value answer;
+                        answer = (table[key].visible) ? table[key] : Value(false);
                         std::cout << "Value was found in memory in file " << levelfiles[i].fileNames[index] << std::endl;
-                        return (table[key].visible) ? table[key] : Value(false);
-                    }  
+                        table.clear();
+                        return answer;
+                    } 
+                   table.clear(); 
                 }
                 // reached end of file with no luck so we close that file
                 file.close();
@@ -224,18 +229,23 @@ std::vector<Value> DB::execute_op(Operation op)
     return results;
 }
 
-bool DB::load_data_file(std::string &fname)
+std::vector<bool,int> DB::load_data_file(std::string &fname, int pos)
 {
+    std::cout << "In loading file" << std::endl;
     std::ifstream fid(fname);
+    std::cout << "Passes loading ifstream" << std::endl;
     if (fid.is_open())
     {
         int key;
         int line_num = 0;
         std::string line;
-        // std::getline(fid, line); // First line is rows, col
-        while (std::getline(fid, line) || line_num <= tablesize)
-        {
+        std::getline(fid, line); // First line is rows, col
+        fid.seekg(pos, fid.beg());
+        while (std::getline(fid, line) && line_num <= tablesize)
+        {   std::cout << "ifstream is open in position " << std::to_string(fid.tellg()) << std::endl;
             line_num++;
+            
+            //std::cout << line << std::endl;
             std::stringstream linestream(line);
             std::string item;
 
@@ -254,10 +264,12 @@ bool DB::load_data_file(std::string &fname)
             Value temp = Value(items);
             temp.visible = vis;
             this->put(key, temp);
+           // std::cout << "we are on line number " << std::to_string(line_num) << std::endl;
         }
-        if (line_num >= tablesize)
-        {
-            return false;
+        std::cout << "completed reading the 100 elements" << std::endl;
+        if (line_num >= tablesize && !fid.eof())
+        {   std::cout << "Leaving load function at position " << std::to_string(fid.tellg()) << std::endl;
+            return {false, fid.tellg()};
         }
     }
     else
@@ -265,7 +277,7 @@ bool DB::load_data_file(std::string &fname)
         fprintf(stderr, "Unable to read %s\n", fname.c_str());
         return false;
     }
-
+    std::cout << "Leaving load function at position " << std::to_string(fid.tellg()) << std::endl;
     return true;
 }
 
