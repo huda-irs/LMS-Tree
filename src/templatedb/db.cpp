@@ -6,8 +6,8 @@
 #include <cmath>
 
 using namespace templatedb;
-int tablesize = 100;
-bool tiering = true;
+// int tablesize = 100;
+// bool tiering = true;
 // tunable parameters: size ratio, choosing between tiering and leveling, tablesize, queryfile
 
 Value DB::get(int key) // be able to read from files to get the value we need if not in memtable
@@ -302,7 +302,16 @@ bool DB::close()
             std::cout << file_check << std::endl;
             this->file.open(file_check, std::ios::in | std::ios::out);
             if (file.is_open())
-            {
+            {    ////////////
+                std::filebuf* pbuf = file.rdbuf();
+                std::size_t size = pbuf->pubseekoff(0, file.end,file.in);
+                pbuf->pubseekpos(0,file.in);
+                char* buffer = new char[size];
+                pbuf->sgetn(buffer,size);
+
+                std::cout << "header written to file in level 0 is: " << buffer <<std::endl;
+                std::cout << "size of content within file is " << std::to_string(size) << std::endl;
+                //////////
                 // this->write_to_file();
                 file.close();
             }
@@ -315,7 +324,7 @@ bool DB::close()
 bool DB::write_to_file() // implement teiring
 {
     std::cout << "writing to file" << std::endl;
-    int levelRatios = 4;
+    // int levelRatios = 4;
     // determine min max keys from memtable
 
     write_to_file(1);
@@ -328,9 +337,9 @@ bool DB::write_to_file(int levelCheck)
     {
         Levels lev;
         lev.numFiles = 0;
-        lev.fileSize = tablesize * pow(4, levelCheck); // tablesize; // size of memtable since each run will be considered the size of memtable
+        lev.fileSize = tablesize * pow(sizeRatio, levelCheck-1); // tablesize; // size of memtable since each run will be considered the size of memtable
                                                        //  lev.numFilesCap = pow(4,(levelCheck));
-        lev.numFilesCap = 4;
+        lev.numFilesCap = sizeRatio;
         levelfiles.push_back(lev);
     }
 
@@ -386,8 +395,20 @@ bool DB::write_to_file(int levelCheck)
         {
             std::string header = std::to_string(table.size()) + ',' + std::to_string(table[table.begin()->first].items.size()) + ',' + std::to_string(table.begin()->first) + ',' + std::to_string(table.rbegin()->first) + '\n';
             file.seekg(0, std::ios::beg);
+            std::cout << "Header for this file is" << header << std::endl;
             file << header;
+            std::cout << "The number of elements in file in level 0 and file number " << std::to_string(levelfiles[0].numFiles) << " is " <<  std::to_string(table.size()) << std::endl;
             file.seekg(0, std::ios::end);
+            // ////////////
+            // std::filebuf* pbuf = file.rdbuf();
+            // std::size_t size = pbuf->pubseekoff(0, file.end,file.in);
+            // pbuf->pubseekpos(0,file.in);
+            // char* buffer = new char[size];
+            // pbuf->sgetn(buffer,size);
+
+            // std::cout << "header written to file in level 0 is: " << buffer <<std::endl;
+            // std::cout << "size of content within file is " << std::to_string(size) << std::endl;
+            // //////////
             for (auto item : table)
             {
                 std::ostringstream line;
@@ -396,6 +417,18 @@ bool DB::write_to_file(int levelCheck)
                 std::string value(line.str());
                 file << item.first << ',' << std::to_string(item.second.visible) << ',' << value << '\n';
             }
+            ////////////
+            std::filebuf* pbuf = file.rdbuf();
+            std::size_t size = pbuf->pubseekoff(0, file.end,file.in);
+            pbuf->pubseekpos(0,file.in);
+            char* buffer = new char[size];
+            pbuf->sgetn(buffer,size);
+
+            std::cout << "header written to file in level 0 is: " << buffer <<std::endl;
+            std::cout << "size of content within file is " << std::to_string(size) << std::endl;
+            //////////
+
+           
             this->file.close();
         }
         else
@@ -404,6 +437,8 @@ bool DB::write_to_file(int levelCheck)
             std::cout << "reached else statement" << std::endl;
             for (auto levelFile : levelfiles[levelCheck - 2].fileNames)
             {
+                std::cout << "Size of mainbuf" << std::to_string(mainMemBuffer.size()) << std::endl;
+                std::cout << "File being added to the mainbuf: " << levelFile << std::endl;
                 this->file.open(levelFile);
                 std::ifstream fid(levelFile);
                 if (fid.is_open())
@@ -412,6 +447,7 @@ bool DB::write_to_file(int levelCheck)
                     int line_num = 0;
                     std::string line;
                     std::getline(fid, line); // First line is rows, dim, minkey, maxkey
+                    std::cout << "Header: " << line << std::endl;
                     while (std::getline(fid, line))
                     {
                         line_num++;
@@ -428,6 +464,7 @@ bool DB::write_to_file(int levelCheck)
                         }
                         mainMemBuffer.insert({key, Value(items)});
                     }
+                    std::cout << "Lines traversed: " << std::to_string(line_num) << std::endl;
                 }
                 file.close();
             }
@@ -670,7 +707,7 @@ bool DB::write_to_file(int levelCheck)
                 levelfiles[levelCheck - 2].numFiles = 0;
                 levelfiles[levelCheck - 2].fileNames.clear();
                 mainMemBuffer.clear();
-            }
+            } 
             else
             {
                 // directly take from levelCheck-1 and levelCheck-2

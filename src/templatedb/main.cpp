@@ -14,44 +14,47 @@
 using namespace std;
 
 int main(int argc, char **argv){ 
-  // arg[0]:  it is datafile we are using for queries
-  // arg[1]: table size
-  // arg[2]: 1 = tiering / 0 = leveling
-  // arg[3]: if arg1 = 0 / null
+  // arg[0]: mainFile
+  // arg[1] it is datafile we are using for queries
+  // arg[2]: table size
+  // arg[3]: 1 = tiering / 0 = leveling
+  // arg[4]: if arg1 = 0 / null
   //       else it is equal to number of files per run
-  // 
-  if(argc < 3){
+  //  
+   
+  std::cout << argv[1] << endl;
+  std::cout << argv[2] << endl;
+  std::cout << (argv[3]) << endl; 
+  std::cout << (argv[4]) << endl; 
+ 
+  if(argc < 5){
     std::cout << "Not enough input arguements" << endl;
-  }
-  else if(stoi(argv[2]) != 0 || stoi(argv[2])!= 1){
+    return 0;
+  } 
+  else if(stoi(argv[3]) != 0 && stoi(argv[3])!= 1){
     std::cout << "You have not selected a proper merging policy" << endl;
     return 0;
   }
-  else if((stoi(argv[2]) == 1 && argc < 4) || ((stoi(argv[2]) == 0) && argc < 3)){
-    std::cout << "The number of arguments is incorrect according to the desired architecture." << std::endl;
-    return 0;
-  }
-
 
     //templatedb::Operation test;
    // cout << test.type;
       cout<< "hello\n";
 
     templatedb::DB test; // DB(input args)
-    test.tablesize = stoi(argv[1]);
-    test.tiering = (bool)stoi(argv[2]);
-    test.sizeRatio = 1; 
-    if(stoi(argv[2]) == 1){
-      //test = templatedb::DB(stoi(argv[1]), (bool)stoi(argv[2]), stoi(argv[3]));
-      test.sizeRatio = stoi(argv[3]);
-      cout<< "hello\n";
-    }
+    test.tablesize = stoi(argv[2]);
+    test.tiering = (bool)stoi(argv[3]);
+    test.sizeRatio = stoi(argv[4]);
+    // if(stoi(argv[3]) == 0){
+    //   //test = templatedb::DB(stoi(argv[1]), (bool)stoi(argv[2]), stoi(argv[3]));
+    //   test.sizeRatio = stoi(argv[4]);
+    //   cout<< "hello\n";
+    // }
    	cout<< "check files were created\n";
 
    	std::vector<Operation> queries;
 
    	//queries = templatedb::Operation::ops_from_file("../../data/test_401_3.data");
-    queries = templatedb::Operation::ops_from_file(argv[0]);
+    queries = templatedb::Operation::ops_from_file(argv[1]);
    	cout << queries.size() << " is the number of operations we have\n";
 
    	Value prefetchTable[queries.size()];
