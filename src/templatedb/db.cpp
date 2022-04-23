@@ -67,12 +67,14 @@ Value DB::get(int key) // be able to read from files to get the value we need if
                     continue;
                 }
                 //bool endFile = false;
-                std::vector<bool,int> endfile = {0,0};
+                //std::vector<bool,int> endfile = {0,0};
+                std::tuple<bool,int> endfile;
+                endfile = std::make_tuple(false, 0);
                 // keep reading the file until we find the result or reached end of file
-                while (endfile[0] == false)
+                while (std::get<0>(endfile) == false)
                 {
                     std::cout << "About to load file" << std::endl;
-                    endFile = load_data_file(levelfiles[i].fileNames[index], endfile[1]);
+                    endfile = load_data_file(levelfiles[i].fileNames[index], std::get<1>(endfile));
                     std::cout << "Loaded data from " << levelfiles[i].fileNames[index];
                     result = table.count(key);
     
@@ -229,18 +231,19 @@ std::vector<Value> DB::execute_op(Operation op)
     return results;
 }
 
-std::vector<bool,int> DB::load_data_file(std::string &fname, int pos)
+std::tuple<bool,int> DB::load_data_file(std::string &fname, int pos)
 {
     std::cout << "In loading file" << std::endl;
     std::ifstream fid(fname);
     std::cout << "Passes loading ifstream" << std::endl;
+   	std::tuple<bool,int> fileINFO;
     if (fid.is_open())
     {
         int key;
         int line_num = 0;
         std::string line;
         std::getline(fid, line); // First line is rows, col
-        fid.seekg(pos, fid.beg());
+        fid.seekg(pos, std::ios::beg);
         while (std::getline(fid, line) && line_num <= tablesize)
         {   std::cout << "ifstream is open in position " << std::to_string(fid.tellg()) << std::endl;
             line_num++;
@@ -269,16 +272,19 @@ std::vector<bool,int> DB::load_data_file(std::string &fname, int pos)
         std::cout << "completed reading the 100 elements" << std::endl;
         if (line_num >= tablesize && !fid.eof())
         {   std::cout << "Leaving load function at position " << std::to_string(fid.tellg()) << std::endl;
-            return {false, fid.tellg()};
+    		 fileINFO = std::make_tuple(false, fid.tellg());
+            return fileINFO;
         }
     }
     else
     {
         fprintf(stderr, "Unable to read %s\n", fname.c_str());
-        return false;
+        fileINFO = std::make_tuple(false, 0);
+        return fileINFO;
     }
     std::cout << "Leaving load function at position " << std::to_string(fid.tellg()) << std::endl;
-    return true;
+    fileINFO = std::make_tuple(true, fid.tellg());
+    return fileINFO;
 }
 
 bool DB::close()

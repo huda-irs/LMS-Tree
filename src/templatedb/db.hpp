@@ -68,7 +68,7 @@ public:
     db_status open(std::string & fname);
     bool close();
 
-    bool load_data_file(std::string & fname);
+    std::tuple<bool,int> load_data_file(std::string & fname, int pointer);
 
     std::vector<Value> execute_op(Operation op);
      
