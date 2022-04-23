@@ -8,8 +8,8 @@
 using namespace templatedb;
 int tablesize = 100;
 bool tiering = true;
+// tunable parameters: size ratio, choosing between tiering and leveling, tablesize, queryfile
 
-// tunable parameters: size ratio, choosing between tiering and leveling
 Value DB::get(int key) // be able to read from files to get the value we need if not in memtable
 {
     int count = 0;
@@ -73,11 +73,12 @@ Value DB::get(int key) // be able to read from files to get the value we need if
                 // keep reading the file until we find the result or reached end of file
                 while (std::get<0>(endfile) == false)
                 {
+                    std::cout << "Endfile is of size: " << std::to_string(std::tuple_size<decltype(endfile)>::value) << std::endl; 
                     std::cout << "About to load file" << std::endl;
                     endfile = load_data_file(levelfiles[i].fileNames[index], std::get<1>(endfile));
                     std::cout << "Loaded data from " << levelfiles[i].fileNames[index];
                     result = table.count(key);
-    
+                    std::cout << "Result is " << result << std::endl;
                     if (result)
                     {
                         Value answer;
@@ -98,6 +99,7 @@ Value DB::get(int key) // be able to read from files to get the value we need if
     this->file.close();
     std::cout << "reassigning current_file file to 0" << std::endl;
     std::cout << "reassigned current_file file to 0" << std::endl;
+    table.clear();
     return Value(false);
 
 } 
@@ -244,16 +246,14 @@ std::tuple<bool,int> DB::load_data_file(std::string &fname, int pos)
         std::string line;
         std::getline(fid, line); // First line is rows, col
         fid.seekg(pos, std::ios::beg);
-        while (std::getline(fid, line) && line_num <= tablesize)
-        {   std::cout << "ifstream is open in position " << std::to_string(fid.tellg()) << std::endl;
+        while (std::getline(fid, line) && line_num < tablesize)
+        {   
+            // std::cout << "ifstream is open in position " << std::to_string(fid.tellg()) << std::endl;
             line_num++;
             
             //std::cout << line << std::endl;
             std::stringstream linestream(line);
             std::string item;
-
-            std::getline(linestream, item, ',');
-            std::string op_code = item;
 
             std::getline(linestream, item, ',');
             key = stoi(item);
@@ -269,12 +269,14 @@ std::tuple<bool,int> DB::load_data_file(std::string &fname, int pos)
             this->put(key, temp);
            // std::cout << "we are on line number " << std::to_string(line_num) << std::endl;
         }
-        std::cout << "completed reading the 100 elements" << std::endl;
+        std::cout << "completed reading " << line_num << " elements" << std::endl;
         if (line_num >= tablesize && !fid.eof())
         {   std::cout << "Leaving load function at position " << std::to_string(fid.tellg()) << std::endl;
     		 fileINFO = std::make_tuple(false, fid.tellg());
+            fid.close();
             return fileINFO;
         }
+       
     }
     else
     {
@@ -290,11 +292,14 @@ std::tuple<bool,int> DB::load_data_file(std::string &fname, int pos)
 bool DB::close()
 {
     std::cout << "final size of table before closing is" << std::to_string(table.size()) << std::endl;
-    write_to_file();
+    if(table.size()>0){
+        write_to_file();
+    }
     for (int i = 0; i < levelfiles.size(); i++)
     {
         for (auto file_check : levelfiles[i].fileNames)
         {
+            std::cout << file_check << std::endl;
             this->file.open(file_check, std::ios::in | std::ios::out);
             if (file.is_open())
             {
