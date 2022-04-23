@@ -55,6 +55,10 @@ public:
     db_status status;
 
     DB() {};
+    //DB(int tablesize, bool tiering, int sizeRatio) {tablesize};
+    int tablesize;
+    bool tiering;
+    int sizeRatio;
     ~DB() {close();};
     std::vector<Levels> levelfiles ;
     Value get(int key);
