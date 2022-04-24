@@ -277,7 +277,7 @@ std::tuple<bool,int> DB::load_data_file(std::string &fname, int pos)
             return fileINFO;
         }
        
-    }
+    }  
     else
     {
         fprintf(stderr, "Unable to read %s\n", fname.c_str());
@@ -286,6 +286,7 @@ std::tuple<bool,int> DB::load_data_file(std::string &fname, int pos)
     }
     std::cout << "Leaving load function at position " << std::to_string(fid.tellg()) << std::endl;
     fileINFO = std::make_tuple(true, fid.tellg());
+    fid.close();
     return fileINFO;
 }
 
@@ -294,6 +295,25 @@ bool DB::close()
     std::cout << "final size of table before closing is" << std::to_string(table.size()) << std::endl;
     if(table.size()>0){
         write_to_file();
+    }
+
+    // Contents in file per row:
+    // [level number] [numfiles] [filesize] [numFilesCap] [list of file names]
+    std::string meta_tree = dirName + "/" +"meta_Data";
+    std::ifstream fid0(meta_tree);
+     if (!fid0.is_open())
+                {
+                    std::ofstream levelingFile(meta_tree);
+                    levelingFile.close();
+                }
+    fid0.close();
+    this->file.open(meta_tree);
+    for(int i = 0; i < levelfiles.size(); i++){
+        file << std::to_string(i) << " " << std::to_string(levelfiles[i].numFiles) << " " << std::to_string(levelfiles[i].fileSize) << " " << std::to_string(levelfiles[i].numFilesCap) ;
+        for(auto file_check : levelfiles[i].fileNames){
+             file<< " " << file_check;
+        }
+        file << "\n";
     }
     for (int i = 0; i < levelfiles.size(); i++)
     {
@@ -352,7 +372,7 @@ bool DB::write_to_file(int levelCheck)
             if (levelfiles[levelCheck - 1].numFiles == 0)
             {
                 // create new sstable for that level
-                std::string newfile = "L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+                std::string newfile = dirName + "/"+"L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
                 levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
                 // levelfiles[0].fileNames.push_back();
                 levelfiles[levelCheck - 1].numFiles += 1;
@@ -373,7 +393,8 @@ bool DB::write_to_file(int levelCheck)
         else
         {
             // create new sstable for that level
-            std::string newfile = "L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+            //std::string newfile = "L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+            std::string newfile = dirName + "/"+"L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
             levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
             // levelfiles[0].fileNames.push_back();
             levelfiles[levelCheck - 1].numFiles += 1;
@@ -505,7 +526,7 @@ bool DB::write_to_file(int levelCheck)
         if (levelfiles[levelCheck - 1].numFiles == 0)
         {
             // create file
-            std::string newfile = "L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+            std::string newfile = dirName +"/"+"L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
             levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
             levelfiles[levelCheck - 1].numFiles += 1;
             std::ifstream fid0(newfile);
@@ -551,7 +572,7 @@ bool DB::write_to_file(int levelCheck)
                 if (levelfiles[levelCheck - 1].numFiles == 0)
                 {
                     // create file
-                    std::string newfile = "L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+                    std::string newfile = dirName + "/" + "L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
                     levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
                     levelfiles[levelCheck - 1].numFiles += 1;
                     std::ifstream fid0(newfile);
@@ -814,7 +835,7 @@ bool DB::write_to_file(int levelCheck)
         return true;
     }
 }
-
+ 
 // void DB::levelingComp(){
 
 // }

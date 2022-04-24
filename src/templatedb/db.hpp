@@ -76,6 +76,7 @@ public:
 
     std::vector<Value> execute_op(Operation op);
      
+    std::string dirName;
 private:
     std::fstream file;
     //std::unordered_map<int, bool, Value> table; // want to modify this to add tombstone

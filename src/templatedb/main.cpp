@@ -5,7 +5,9 @@
 #include <sstream>
 #include <unordered_map>
 #include <vector>
-
+#include <sys/stat.h>
+#include <algorithm>
+#include <stdio.h>
 #include "operation.hpp"
 #include "operation.cpp"
 #include "db.hpp"
@@ -39,7 +41,7 @@ int main(int argc, char **argv){
     //templatedb::Operation test;
    // cout << test.type;
       cout<< "hello\n";
-
+      std::string tiering =  stoi(argv[3])==1 ? "T" : "L";
     templatedb::DB test; // DB(input args)
     test.tablesize = stoi(argv[2]);
     test.tiering = (bool)stoi(argv[3]);
@@ -57,11 +59,58 @@ int main(int argc, char **argv){
     queries = templatedb::Operation::ops_from_file(argv[1]);
    	cout << queries.size() << " is the number of operations we have\n";
 
-   	Value prefetchTable[queries.size()];
+    string meta_tree = tiering + "_" + argv[2] + "_" + argv[4] + "_" + std::to_string(queries[0].args.size()); 
+   if (mkdir(meta_tree.c_str(), 0777) != 0){
+     //cout << "could not create file" << endl;
+      ifstream readFile(meta_tree + "/meta_tree");
+      if(readFile.is_open()){
+            std::string line;
+            while(getline(readFile, line)){
+              std::stringstream linestream(line);
+              std::string item;
+              templatedb::Levels temp;
+              test.levelfiles.push_back(temp);
+
+              std::getline(linestream, item, ' ');
+              int levelNum = stoi(item);
+              
+              std::getline(linestream, item, ' ');
+              test.levelfiles[levelNum].numFiles = stoi(item);
+              
+              std::getline(linestream, item, ' ');
+              test.levelfiles[levelNum].fileSize = stoi(item);
+              
+              std::getline(linestream, item, ' ');
+              test.levelfiles[levelNum].numFilesCap = stoi(item);
+              
+              std::vector<string> items;
+              while (std::getline(linestream, item, ' '))
+              {
+                  test.levelfiles[levelNum].fileNames.push_back((item));
+              }
+
+              
+            }
+      }
+      else{
+
+        cout<< "the directory and its meta data could note be found" << endl;
+      }
+
+      // check if meta_data file exists
+      // if so create loop
+      // create a temp levels constructor to push back into test.levelfils
+      // enter data into temp
+      // levelfiles.pushback(temp)
+
+   }
+   
+   test.dirName = meta_tree;
+    Value prefetchTable[queries.size()];
 
    	for(int i = 0; i < queries.size(); i++){
    		prefetchTable[i].items = queries[i].args;
-   	}
+   	} 
    
    	for(int i = 0; i < queries.size(); i++){
    		if(queries[i].type == 3){
