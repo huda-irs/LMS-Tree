@@ -353,6 +353,7 @@ bool DB::write_to_file() // implement teiring
 
 bool DB::write_to_file(int levelCheck)
 {
+    std::cout << "Level Check is " << levelCheck << std::endl;
     if (levelfiles.size() < levelCheck)
     {
         Levels lev;
