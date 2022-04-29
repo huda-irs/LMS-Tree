@@ -1,14 +1,10 @@
-// tunable parameters: size ratio, choosing between tiering and leveling
-
 #include "db.hpp"
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <ctime>
 
 using namespace templatedb;
-// int tablesize = 100;
-// bool tiering = true;
-// tunable parameters: size ratio, choosing between tiering and leveling, tablesize, queryfile
 
 Value DB::get(int key) // be able to read from files to get the value we need if not in memtable
 {
@@ -22,7 +18,7 @@ Value DB::get(int key) // be able to read from files to get the value we need if
     { // this is where we want to start scanning to files
         std::cout << "Value for key " << std::to_string(key) << " was not found within memtable must check memory" << std::endl;
 
-        write_to_file();
+        write_to_file(1);
         table.clear();
 
         bool result;
@@ -66,8 +62,6 @@ Value DB::get(int key) // be able to read from files to get the value we need if
                     file.close();
                     continue;
                 }
-                //bool endFile = false;
-                //std::vector<bool,int> endfile = {0,0};
                 std::tuple<bool,int> endfile;
                 endfile = std::make_tuple(false, 0);
                 // keep reading the file until we find the result or reached end of file
@@ -113,7 +107,7 @@ void DB::put(int key, Value val) // complete?
     }
     else
     {
-        write_to_file();
+        write_to_file(1);
         table.clear();
         std::cout << "written to file\n";
         table.insert({key, val});
@@ -128,8 +122,24 @@ std::vector<Value> DB::scan() // be able to read from files to get the value we 
     {
         return_vector.push_back(pair.second);
     }
-
     return return_vector;
+
+    // std::string scanFile = dirName + "/"+"Scan_"+std::to_string(time(NULL));
+    // std::ifstream fid0(scanFile);
+    //  if (!fid0.is_open())
+    //             {
+    //                 std::ofstream levelingFile(scanFile);
+    //                 levelingFile.close();
+    //             }
+    // fid0.close();
+    // this->file.open(scanFile);
+    // for(int i = 0; i < levelfiles.size(); i++){
+    //     file << std::to_string(i) << " " << std::to_string(levelfiles[i].numFiles) << " " << std::to_string(levelfiles[i].fileSize) << " " << std::to_string(levelfiles[i].numFilesCap) ;
+    //     for(auto file_check : levelfiles[i].fileNames){
+    //          file<< " " << file_check;
+    //     }
+    //     file << "\n";
+    // }
 }
 
 std::vector<Value> DB::scan(int min_key, int max_key) // be able to read from files to get the value we need if not in memtable
@@ -141,7 +151,6 @@ std::vector<Value> DB::scan(int min_key, int max_key) // be able to read from fi
         if ((pair.first >= min_key) && (pair.first <= max_key))
             return_vector.push_back(pair.second);
     }
-
     return return_vector;
 }
 
@@ -200,11 +209,6 @@ void DB::del(int min_key, int max_key) // complete?
     }
 }
 
-size_t DB::size()
-{
-    return table.size();
-}
-
 std::vector<Value> DB::execute_op(Operation op)
 {
     std::vector<Value> results;
@@ -248,10 +252,8 @@ std::tuple<bool,int> DB::load_data_file(std::string &fname, int pos)
         fid.seekg(pos, std::ios::beg);
         while (std::getline(fid, line) && line_num < tablesize)
         {   
-            // std::cout << "ifstream is open in position " << std::to_string(fid.tellg()) << std::endl;
             line_num++;
             
-            //std::cout << line << std::endl;
             std::stringstream linestream(line);
             std::string item;
 
@@ -294,7 +296,7 @@ bool DB::close()
 {
     std::cout << "final size of table before closing is" << std::to_string(table.size()) << std::endl;
     if(table.size()>0){
-        write_to_file();
+        write_to_file(1);
     }
 
     // Contents in file per row:
@@ -341,16 +343,6 @@ bool DB::close()
     return true;
 }
 
-bool DB::write_to_file() // implement teiring
-{
-    std::cout << "writing to file" << std::endl;
-    // int levelRatios = 4;
-    // determine min max keys from memtable
-
-    write_to_file(1);
-    return true;
-}
-
 bool DB::write_to_file(int levelCheck)
 {
     std::cout << "Level Check is " << levelCheck << std::endl;
@@ -358,8 +350,7 @@ bool DB::write_to_file(int levelCheck)
     {
         Levels lev;
         lev.numFiles = 0;
-        lev.fileSize = tablesize * pow(sizeRatio, levelCheck-1); // tablesize; // size of memtable since each run will be considered the size of memtable
-                                                       //  lev.numFilesCap = pow(4,(levelCheck));
+        lev.fileSize = tablesize * pow(sizeRatio, levelCheck-1); // size of memtable since each run will be considered the size of memtable
         lev.numFilesCap = sizeRatio;
         levelfiles.push_back(lev);
     }
@@ -394,12 +385,9 @@ bool DB::write_to_file(int levelCheck)
         else
         {
             // create new sstable for that level
-            //std::string newfile = "L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
             std::string newfile = dirName + "/"+"L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
             levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
-            // levelfiles[0].fileNames.push_back();
             levelfiles[levelCheck - 1].numFiles += 1;
-            // levelfiles[0].fileSize = 100;
             std::ifstream fid0(newfile);
             if (!fid0.is_open())
             {
@@ -545,10 +533,6 @@ bool DB::write_to_file(int levelCheck)
         }
         else
         { // in this we want to check num elements in file
-            // if numelements + tablesize in file is >= levelfile[levelCheck-1].filesize
-            // sort, merge, flush (write_to_file(levelcheck + 1);)
-            // else
-            // sort, merge
             std::string levelFile = levelfiles[levelCheck - 1].fileNames[0];
             this->file.open(levelFile);
             std::ifstream fid(levelFile);
@@ -821,22 +805,8 @@ bool DB::write_to_file(int levelCheck)
                 levelfiles[levelCheck - 2].fileNames.clear();
                 mainMemBuffer.clear();
             }
-            // std::cout << "You've gone too far!!!" << std::endl;
-            // if(tunable vairable){
-            //  leveling
-            // }
-            // else{
-            //   tiering
-            // }
-
-            // compaction
-            // std::cout << "error" << std::endl;
             return false;
         }
         return true;
     }
 }
- 
-// void DB::levelingComp(){
-
-// }

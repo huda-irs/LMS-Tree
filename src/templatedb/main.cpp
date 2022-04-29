@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
         std::getline(linestream, item, ' ');
         int levelNum = stoi(item);
-
+ 
         std::getline(linestream, item, ' ');
         test.levelfiles[levelNum].numFiles = stoi(item);
 
