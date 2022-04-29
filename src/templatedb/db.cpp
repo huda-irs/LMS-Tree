@@ -30,10 +30,10 @@ Value DB::get(int key) // be able to read from files to get the value we need if
             file.close();
             for (index = levelfiles[i].numFiles - 1; index >= 0; index--)
             {
-                std::cout << "Searching in Level" << std::to_string(i) << " and sstable " << std::to_string(index) <<std::endl;
+                std::cout << "Searching in Level" << std::to_string(i) << " and sstable " << std::to_string(index) << std::endl;
                 std::cout << levelfiles[i].fileNames[index] << std::endl;
                 this->file.open(levelfiles[i].fileNames[index], std::ios::in | std::ios::out);
-                std::cout << "looking to read header now" <<std::endl;
+                std::cout << "looking to read header now" << std::endl;
                 // read header
                 std::ifstream fid(levelfiles[i].fileNames[index]);
                 std::string line;
@@ -62,16 +62,16 @@ Value DB::get(int key) // be able to read from files to get the value we need if
                     file.close();
                     continue;
                 }
-                std::tuple<bool,int> endfile;
+                std::tuple<bool, int> endfile;
                 endfile = std::make_tuple(false, 0);
                 // keep reading the file until we find the result or reached end of file
                 while (std::get<0>(endfile) == false)
-                {
-                    std::cout << "Endfile is of size: " << std::to_string(std::tuple_size<decltype(endfile)>::value) << std::endl; 
+                {   
+                    std::cout << "Endfile is of size: " << std::to_string(std::tuple_size<decltype(endfile)>::value) << std::endl;
                     std::cout << "About to load file" << std::endl;
                     endfile = load_data_file(levelfiles[i].fileNames[index], std::get<1>(endfile));
                     std::cout << "Loaded data from " << levelfiles[i].fileNames[index];
-                    result = table.count(key);
+                    result = table.count(key); 
                     std::cout << "Result is " << result << std::endl;
                     if (result)
                     {
@@ -80,8 +80,8 @@ Value DB::get(int key) // be able to read from files to get the value we need if
                         std::cout << "Value was found in memory in file " << levelfiles[i].fileNames[index] << std::endl;
                         table.clear();
                         return answer;
-                    } 
-                   table.clear(); 
+                    }
+                    table.clear();
                 }
                 // reached end of file with no luck so we close that file
                 file.close();
@@ -95,8 +95,7 @@ Value DB::get(int key) // be able to read from files to get the value we need if
     std::cout << "reassigned current_file file to 0" << std::endl;
     table.clear();
     return Value(false);
-
-} 
+}
 
 void DB::put(int key, Value val) // complete?
 {
@@ -114,32 +113,71 @@ void DB::put(int key, Value val) // complete?
     }
 }
 
-std::vector<Value> DB::scan() // be able to read from files to get the value we need if not in memtable
+void DB::scan() // be able to read from files to get the value we need if not in memtable
 // OH: print in the terminal or a txt file, best way is to the terminal
 {
-    std::vector<Value> return_vector;
-    for (auto pair : table)
-    {
-        return_vector.push_back(pair.second);
-    }
-    return return_vector;
-
-    // std::string scanFile = dirName + "/"+"Scan_"+std::to_string(time(NULL));
-    // std::ifstream fid0(scanFile);
-    //  if (!fid0.is_open())
-    //             {
-    //                 std::ofstream levelingFile(scanFile);
-    //                 levelingFile.close();
-    //             }
-    // fid0.close();
-    // this->file.open(scanFile);
-    // for(int i = 0; i < levelfiles.size(); i++){
-    //     file << std::to_string(i) << " " << std::to_string(levelfiles[i].numFiles) << " " << std::to_string(levelfiles[i].fileSize) << " " << std::to_string(levelfiles[i].numFilesCap) ;
-    //     for(auto file_check : levelfiles[i].fileNames){
-    //          file<< " " << file_check;
-    //     }
-    //     file << "\n";
+    std::cout << "SCANNING!!!!" << std::endl;
+    // std::vector<Value> return_vector;
+    // for (auto pair : table)
+    // {
+    //     return_vector.push_back(pair.second);
     // }
+    // return return_vector; 
+    write_to_file(1);
+    table.clear();
+    
+    std::string scanFile = dirName + "/" + "Scan_" + std::to_string(time(NULL));
+    std::ifstream fid0(scanFile);
+    if (!fid0.is_open())
+    {
+        std::ofstream levelingFile(scanFile);
+        levelingFile.close();
+    }
+     fid0.close();
+     std::ofstream levelingFile(scanFile);
+    // this->file.open(scanFile);
+      for (int i = 0; i < levelfiles.size(); i++)
+        {
+            int index = levelfiles[i].numFiles - 1;
+            file.close();
+            for (index = levelfiles[i].numFiles - 1; index >= 0; index--)
+            {
+                std::cout << "Searching in Level" << std::to_string(i) << " and sstable " << std::to_string(index) << std::endl;
+                std::cout << levelfiles[i].fileNames[index] << std::endl;
+                this->file.open(levelfiles[i].fileNames[index], std::ios::in | std::ios::out);
+                std::cout << "looking to read header now" << std::endl;
+                std::ifstream fid(levelfiles[i].fileNames[index]);
+                std::string line;
+                std::getline(fid, line); // First line is rows, col
+                std::tuple<bool, int> endfile;
+                endfile = std::make_tuple(false, fid.tellg());
+                fid.close();
+                // keep reading the file until we find the result or reached end of file
+                while (std::get<0>(endfile) == false)
+                {
+                    std::cout << "Endfile is of size: " << std::to_string(std::tuple_size<decltype(endfile)>::value) << std::endl;
+                    std::cout << "About to load file" << std::endl;
+                    endfile = load_data_file(levelfiles[i].fileNames[index], std::get<1>(endfile));
+                    std::cout << "Loaded data from " << levelfiles[i].fileNames[index];
+                    std::cout << "Table has " << table.size() << " elements." << std::endl;
+  
+                   for (auto item : table)
+                    {
+                        std::ostringstream line;
+                        std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
+                        line << item.second.items.back();
+                        std::string value(line.str());
+                        levelingFile << item.first << ',' << std::to_string(item.second.visible) << ',' << value << '\n';
+                    }
+                    
+                    table.clear();
+                }
+                // reached end of file with no luck so we close that file
+                file.close();
+            }
+        } 
+    levelingFile.close();
+
 }
 
 std::vector<Value> DB::scan(int min_key, int max_key) // be able to read from files to get the value we need if not in memtable
@@ -187,7 +225,7 @@ void DB::del(int min_key, int max_key) // complete?
 
     int key = min_key;
     while (key <= max_key)
-    {
+    {  
         bool exisit = table.count(key); // check if this value exisists in memetable
         Value delete_key;
         if (exisit)
@@ -237,23 +275,26 @@ std::vector<Value> DB::execute_op(Operation op)
     return results;
 }
 
-std::tuple<bool,int> DB::load_data_file(std::string &fname, int pos)
+std::tuple<bool, int> DB::load_data_file(std::string &fname, int pos)
 {
     std::cout << "In loading file" << std::endl;
     std::ifstream fid(fname);
     std::cout << "Passes loading ifstream" << std::endl;
-   	std::tuple<bool,int> fileINFO;
+    std::tuple<bool, int> fileINFO;
     if (fid.is_open())
     {
         int key;
         int line_num = 0;
         std::string line;
-        std::getline(fid, line); // First line is rows, col
+        int current_pos;
+        // if (pos == 0){
+        //     std::getline(fid, line); // First line is rows, col
+        // }
         fid.seekg(pos, std::ios::beg);
         while (std::getline(fid, line) && line_num < tablesize)
-        {   
+        {   current_pos = fid.tellg();
             line_num++;
-            
+
             std::stringstream linestream(line);
             std::string item;
 
@@ -269,17 +310,18 @@ std::tuple<bool,int> DB::load_data_file(std::string &fname, int pos)
             Value temp = Value(items);
             temp.visible = vis;
             this->put(key, temp);
-           // std::cout << "we are on line number " << std::to_string(line_num) << std::endl;
+            // std::cout << "we are on line number " << std::to_string(line_num) << std::endl;
         }
+        std::cout << "Last key was " << key << std::endl;
         std::cout << "completed reading " << line_num << " elements" << std::endl;
         if (line_num >= tablesize && !fid.eof())
-        {   std::cout << "Leaving load function at position " << std::to_string(fid.tellg()) << std::endl;
-    		 fileINFO = std::make_tuple(false, fid.tellg());
+        {
+            std::cout << "Leaving load function at position " << std::to_string(fid.tellg()) << std::endl;
+            fileINFO = std::make_tuple(false, current_pos);
             fid.close();
             return fileINFO;
         }
-       
-    }  
+    }
     else
     {
         fprintf(stderr, "Unable to read %s\n", fname.c_str());
@@ -295,25 +337,28 @@ std::tuple<bool,int> DB::load_data_file(std::string &fname, int pos)
 bool DB::close()
 {
     std::cout << "final size of table before closing is" << std::to_string(table.size()) << std::endl;
-    if(table.size()>0){
+    if (table.size() > 0)
+    {
         write_to_file(1);
     }
 
     // Contents in file per row:
     // [level number] [numfiles] [filesize] [numFilesCap] [list of file names]
-    std::string meta_tree = dirName + "/" +"meta_Data";
+    std::string meta_tree = dirName + "/" + "meta_Data";
     std::ifstream fid0(meta_tree);
-     if (!fid0.is_open())
-                {
-                    std::ofstream levelingFile(meta_tree);
-                    levelingFile.close();
-                }
+    if (!fid0.is_open())
+    {
+        std::ofstream levelingFile(meta_tree);
+        levelingFile.close();
+    }
     fid0.close();
     this->file.open(meta_tree);
-    for(int i = 0; i < levelfiles.size(); i++){
-        file << std::to_string(i) << " " << std::to_string(levelfiles[i].numFiles) << " " << std::to_string(levelfiles[i].fileSize) << " " << std::to_string(levelfiles[i].numFilesCap) ;
-        for(auto file_check : levelfiles[i].fileNames){
-             file<< " " << file_check;
+    for (int i = 0; i < levelfiles.size(); i++)
+    {
+        file << std::to_string(i) << " " << std::to_string(levelfiles[i].numFiles) << " " << std::to_string(levelfiles[i].fileSize) << " " << std::to_string(levelfiles[i].numFilesCap);
+        for (auto file_check : levelfiles[i].fileNames)
+        {
+            file << " " << file_check;
         }
         file << "\n";
     }
@@ -324,16 +369,16 @@ bool DB::close()
             std::cout << file_check << std::endl;
             this->file.open(file_check, std::ios::in | std::ios::out);
             if (file.is_open())
-            {    ////////////
-                std::filebuf* pbuf = file.rdbuf();
-                std::size_t size = pbuf->pubseekoff(0, file.end,file.in);
-                pbuf->pubseekpos(0,file.in);
-                char* buffer = new char[size];
-                pbuf->sgetn(buffer,size);
+            { ////////////
+                // std::filebuf *pbuf = file.rdbuf();
+                // std::size_t size = pbuf->pubseekoff(0, file.end, file.in);
+                // pbuf->pubseekpos(0, file.in);
+                // char *buffer = new char[size];
+                // pbuf->sgetn(buffer, size);
 
-                std::cout << "header written to file in level 0 is: " << buffer <<std::endl;
-                std::cout << "size of content within file is " << std::to_string(size) << std::endl;
-                //////////
+                // std::cout << "header written to file in level 0 is: " << buffer << std::endl;
+                // std::cout << "size of content within file is " << std::to_string(size) << std::endl;
+                // //////////
                 // this->write_to_file();
                 file.close();
             }
@@ -350,7 +395,7 @@ bool DB::write_to_file(int levelCheck)
     {
         Levels lev;
         lev.numFiles = 0;
-        lev.fileSize = tablesize * pow(sizeRatio, levelCheck-1); // size of memtable since each run will be considered the size of memtable
+        lev.fileSize = tablesize * pow(sizeRatio, levelCheck - 1); // size of memtable since each run will be considered the size of memtable
         lev.numFilesCap = sizeRatio;
         levelfiles.push_back(lev);
     }
@@ -364,7 +409,7 @@ bool DB::write_to_file(int levelCheck)
             if (levelfiles[levelCheck - 1].numFiles == 0)
             {
                 // create new sstable for that level
-                std::string newfile = dirName + "/"+"L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+                std::string newfile = dirName + "/" + "L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
                 levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
                 // levelfiles[0].fileNames.push_back();
                 levelfiles[levelCheck - 1].numFiles += 1;
@@ -385,7 +430,7 @@ bool DB::write_to_file(int levelCheck)
         else
         {
             // create new sstable for that level
-            std::string newfile = dirName + "/"+"L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+            std::string newfile = dirName + "/" + "L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
             levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
             levelfiles[levelCheck - 1].numFiles += 1;
             std::ifstream fid0(newfile);
@@ -407,7 +452,7 @@ bool DB::write_to_file(int levelCheck)
             file.seekg(0, std::ios::beg);
             std::cout << "Header for this file is" << header << std::endl;
             file << header;
-            std::cout << "The number of elements in file in level 0 and file number " << std::to_string(levelfiles[0].numFiles) << " is " <<  std::to_string(table.size()) << std::endl;
+            std::cout << "The number of elements in file in level 0 and file number " << std::to_string(levelfiles[0].numFiles) << " is " << std::to_string(table.size()) << std::endl;
             file.seekg(0, std::ios::end);
             // ////////////
             // std::filebuf* pbuf = file.rdbuf();
@@ -428,17 +473,16 @@ bool DB::write_to_file(int levelCheck)
                 file << item.first << ',' << std::to_string(item.second.visible) << ',' << value << '\n';
             }
             ////////////
-            std::filebuf* pbuf = file.rdbuf();
-            std::size_t size = pbuf->pubseekoff(0, file.end,file.in);
-            pbuf->pubseekpos(0,file.in);
-            char* buffer = new char[size];
-            pbuf->sgetn(buffer,size);
+            // std::filebuf *pbuf = file.rdbuf();
+            // std::size_t size = pbuf->pubseekoff(0, file.end, file.in);
+            // pbuf->pubseekpos(0, file.in);
+            // char *buffer = new char[size];
+            // pbuf->sgetn(buffer, size);
 
-            std::cout << "header written to file in level 0 is: " << buffer <<std::endl;
-            std::cout << "size of content within file is " << std::to_string(size) << std::endl;
+            // std::cout << "header written to file in level 0 is: " << buffer << std::endl;
+            // std::cout << "size of content within file is " << std::to_string(size) << std::endl;
             //////////
 
-           
             this->file.close();
         }
         else
@@ -515,7 +559,7 @@ bool DB::write_to_file(int levelCheck)
         if (levelfiles[levelCheck - 1].numFiles == 0)
         {
             // create file
-            std::string newfile = dirName +"/"+"L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
+            std::string newfile = dirName + "/" + "L" + std::to_string(levelCheck - 1) + "SST" + std::to_string(levelfiles[levelCheck - 1].numFiles);
             levelfiles[levelCheck - 1].fileNames.insert(levelfiles[levelCheck - 1].fileNames.end(), {newfile});
             levelfiles[levelCheck - 1].numFiles += 1;
             std::ifstream fid0(newfile);
@@ -713,7 +757,7 @@ bool DB::write_to_file(int levelCheck)
                 levelfiles[levelCheck - 2].numFiles = 0;
                 levelfiles[levelCheck - 2].fileNames.clear();
                 mainMemBuffer.clear();
-            } 
+            }
             else
             {
                 // directly take from levelCheck-1 and levelCheck-2

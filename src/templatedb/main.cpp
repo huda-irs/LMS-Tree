@@ -116,12 +116,13 @@ int main(int argc, char **argv)
     // enter data into temp
     // levelfiles.pushback(temp)
   }
-
+ 
   test.dirName = meta_tree;
   Value prefetchTable[queries.size()];
 
   for (int i = 0; i < queries.size(); i++)
   {
+    // cout << queries[i].type << endl;
     prefetchTable[i].items = queries[i].args;
   }
 
@@ -145,7 +146,7 @@ int main(int argc, char **argv)
     }
     else if (queries[i].type == 100)
     {
-      continue;
+      continue; 
     }
     else
     {
