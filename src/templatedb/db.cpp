@@ -38,6 +38,7 @@ Value DB::get(int key) // be able to read from files to get the value we need if
                 std::ifstream fid(levelfiles[i].fileNames[index]);
                 std::string line;
                 std::getline(fid, line); // First line is rows, col
+                int first_position = fid.tellg();
                 std::stringstream linestream(line);
                 std::string item;
 
@@ -63,7 +64,7 @@ Value DB::get(int key) // be able to read from files to get the value we need if
                     continue;
                 }
                 std::tuple<bool, int> endfile;
-                endfile = std::make_tuple(false, 0);
+                endfile = std::make_tuple(false, first_position);
                 // keep reading the file until we find the result or reached end of file
                 while (std::get<0>(endfile) == false)
                 {   
