@@ -181,16 +181,91 @@ void DB::scan() // be able to read from files to get the value we need if not in
 
 }
 
-std::vector<Value> DB::scan(int min_key, int max_key) // be able to read from files to get the value we need if not in memtable
+void DB::scan(int min_key, int max_key) // be able to read from files to get the value we need if not in memtable
 // OH: return how many values you found (in main method), return a vector of all the values
 {
-    std::vector<Value> return_vector;
-    for (auto pair : table)
+    std::cout << "Reached range scan and min is " << min_key << " and max is " << max_key << std::endl; 
+    write_to_file(1);
+    table.clear();
+    
+    std::string scanFile = dirName + "/" + "RangeScan_" + std::to_string(time(NULL));
+    std::ifstream fid0(scanFile);
+    if (!fid0.is_open())
     {
-        if ((pair.first >= min_key) && (pair.first <= max_key))
-            return_vector.push_back(pair.second);
+        std::ofstream levelingFile(scanFile);
+        levelingFile.close();
     }
-    return return_vector;
+     fid0.close();
+     std::ofstream levelingFile(scanFile);
+    // this->file.open(scanFile);
+      for (int i = 0; i < levelfiles.size(); i++)
+        {
+            int index = levelfiles[i].numFiles - 1;
+            file.close();
+            for (index = levelfiles[i].numFiles - 1; index >= 0; index--)
+            {
+                std::cout << "Searching in Level" << std::to_string(i) << " and sstable " << std::to_string(index) << std::endl;
+                std::cout << levelfiles[i].fileNames[index] << std::endl;
+                this->file.open(levelfiles[i].fileNames[index], std::ios::in | std::ios::out);
+                std::cout << "looking to read header now" << std::endl;
+                std::ifstream fid(levelfiles[i].fileNames[index]);
+                std::string line;
+                std::getline(fid, line); // First line is rows, col
+                int first_position = fid.tellg();
+                std::stringstream linestream(line);
+                std::string item;
+
+                std::getline(linestream, item, ',');
+                int numElm = stoi(item);
+
+                std::getline(linestream, item, ',');
+                int dim = stoi(item);
+
+                std::getline(linestream, item, ',');
+                int minKey = stoi(item);
+
+                std::getline(linestream, item, ',');
+                int maxKey = stoi(item);
+                std::cout << std::to_string(maxKey) << std::endl;
+                std::cout << std::to_string(minKey) << std::endl;
+
+                // we do not want to read file if it is empty or the key does not fall within the range
+                if (numElm == 0 || (minKey > max_key) || (maxKey < min_key))
+                {
+                    std::cout << "Level" << std::to_string(i) << "SSTable" << std::to_string(index) << " does not have the key range we want. On to the next one" << std::endl;
+                    file.close();
+                    continue;
+                }
+                std::tuple<bool, int> endfile;
+                endfile = std::make_tuple(false, fid.tellg());
+                fid.close();
+                // keep reading the file until we find the result or reached end of file
+                while (std::get<0>(endfile) == false)
+                {
+                    std::cout << "Endfile is of size: " << std::to_string(std::tuple_size<decltype(endfile)>::value) << std::endl;
+                    std::cout << "About to load file" << std::endl;
+                    endfile = load_data_file(levelfiles[i].fileNames[index], std::get<1>(endfile));
+                    std::cout << "Loaded data from " << levelfiles[i].fileNames[index];
+                    std::cout << "Table has " << table.size() << " elements." << std::endl;
+  
+                   for (auto item : table)
+                    {
+                        if(item.first>=min_key && item.first<=max_key){
+                            std::ostringstream line;
+                            std::copy(item.second.items.begin(), item.second.items.end() - 1, std::ostream_iterator<int>(line, ","));
+                            line << item.second.items.back();
+                            std::string value(line.str());
+                            levelingFile << item.first << ',' << std::to_string(item.second.visible) << ',' << value << '\n';
+                        }
+                    }
+                    
+                    table.clear();
+                }
+                // reached end of file with no luck so we close that file
+                file.close();
+            }
+        } 
+    levelingFile.close();
 }
 
 void DB::del(int key)
@@ -261,7 +336,7 @@ std::vector<Value> DB::execute_op(Operation op)
     }
     else if (op.type == SCAN)
     {
-        results = this->scan(op.key, op.args[0]);
+        this->scan(op.key, op.args[0]);
     }
     else if (op.type == DELETE)
     {

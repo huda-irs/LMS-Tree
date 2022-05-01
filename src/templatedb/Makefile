@@ -1,4 +1,4 @@
-mainMade: db.cpp main.cpp
+mainMade: db.cpp main.cpp operation.cpp
 	#rm -f L*
 	g++ -std=c++11 -o mainMade main.cpp
 	rm -f log.txt

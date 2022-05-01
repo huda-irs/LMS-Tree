@@ -115,14 +115,15 @@ int main(int argc, char **argv)
     // create a temp levels constructor to push back into test.levelfils
     // enter data into temp
     // levelfiles.pushback(temp)
-  }
+  }  
  
-  test.dirName = meta_tree;
-  Value prefetchTable[queries.size()];
-
+  test.dirName = meta_tree; 
+  cout << "Query size is " << queries.size() << endl;
+  Value prefetchTable[queries.size()]; 
+ 
   for (int i = 0; i < queries.size(); i++)
   {
-    // cout << queries[i].type << endl;
+    cout << queries[i].type << endl;
     prefetchTable[i].items = queries[i].args;
   }
 
@@ -137,8 +138,17 @@ int main(int argc, char **argv)
       test.del(queries[i].key);
     }
     else if (queries[i].type == 1)
-    {
-      test.scan();
+    { 
+      cout << "Entering Scan" << endl;
+      cout << queries[i].args.size() << endl;
+      if(prefetchTable[i].items.size() > 0){ 
+        cout << "RANGE" << endl;
+        test.scan(queries[i].key,prefetchTable[i].items[0]);
+      }
+      else{ 
+        cout << "SCAN" << endl;
+        test.scan();
+      }
     }
     else if (queries[i].type == 0)
     {
@@ -146,6 +156,7 @@ int main(int argc, char **argv)
     }
     else if (queries[i].type == 100)
     {
+      cout << "Scan is noop" << endl;
       continue; 
     }
     else
