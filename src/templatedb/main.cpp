@@ -123,7 +123,7 @@ int main(int argc, char **argv)
  
   for (int i = 0; i < queries.size(); i++)
   {
-    cout << queries[i].type << endl;
+    // cout << queries[i].type << endl;
     prefetchTable[i].items = queries[i].args;
   }
 
@@ -139,14 +139,11 @@ int main(int argc, char **argv)
     }
     else if (queries[i].type == 1)
     { 
-      cout << "Entering Scan" << endl;
       cout << queries[i].args.size() << endl;
       if(prefetchTable[i].items.size() > 0){ 
-        cout << "RANGE" << endl;
         test.scan(queries[i].key,prefetchTable[i].items[0]);
       }
-      else{ 
-        cout << "SCAN" << endl;
+      else{
         test.scan();
       }
     }

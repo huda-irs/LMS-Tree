@@ -10,10 +10,13 @@ Operation::Operation(std::string op_string, int _key, std::vector<int> & _args)
         type = GET;
     else if (op_string == "S")
         type = SCAN;
+    else if (op_string[0]=='S')
+        type = SCAN;
     else if (op_string == "D")
         type = DELETE;
-    else
+    else{
         type = NO_OP;
+    }
     key = _key;
     args = _args;
 }

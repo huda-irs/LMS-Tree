@@ -124,8 +124,10 @@ void DB::scan() // be able to read from files to get the value we need if not in
     //     return_vector.push_back(pair.second);
     // }
     // return return_vector; 
-    write_to_file(1);
-    table.clear();
+    if (table.size() != 0){
+        write_to_file(1);
+        table.clear();
+    }
     
     std::string scanFile = dirName + "/" + "Scan_" + std::to_string(time(NULL));
     std::ifstream fid0(scanFile);
@@ -175,9 +177,11 @@ void DB::scan() // be able to read from files to get the value we need if not in
                 }
                 // reached end of file with no luck so we close that file
                 file.close();
+                
             }
         } 
     levelingFile.close();
+    table.clear();
 
 }
 
@@ -185,8 +189,11 @@ void DB::scan(int min_key, int max_key) // be able to read from files to get the
 // OH: return how many values you found (in main method), return a vector of all the values
 {
     std::cout << "Reached range scan and min is " << min_key << " and max is " << max_key << std::endl; 
-    write_to_file(1);
-    table.clear();
+    if (table.size() != 0){
+        write_to_file(1);
+        table.clear();
+    }
+
     
     std::string scanFile = dirName + "/" + "RangeScan_" + std::to_string(time(NULL));
     std::ifstream fid0(scanFile);
@@ -442,7 +449,7 @@ bool DB::close()
     {
         for (auto file_check : levelfiles[i].fileNames)
         {
-            std::cout << file_check << std::endl;
+            std::cout << "This is file check " << file_check << std::endl;
             this->file.open(file_check, std::ios::in | std::ios::out);
             if (file.is_open())
             { ////////////
@@ -601,7 +608,7 @@ bool DB::write_to_file(int levelCheck)
             std::string newfile = levelfiles[levelCheck - 1].fileNames[(levelfiles[levelCheck - 1].numFiles) - 1]; // "L" + std::to_string(levelCheck) + "SST" + std::to_string(levelfiles[levelCheck-1].numFiles);
             std::cout << newfile << std::endl;
             this->file.open(newfile);
-            std::cout << std::to_string(mainMemBuffer.size()) << std::endl;
+            std::cout << "Membuffer Size: " << std::to_string(mainMemBuffer.size()) << std::endl;
             std::string header = std::to_string(mainMemBuffer.size()) + ',' + std::to_string(mainMemBuffer[mainMemBuffer.begin()->first].items.size()) + ',' + std::to_string(mainMemBuffer.begin()->first) + ',' + std::to_string(mainMemBuffer.rbegin()->first) + '\n';
             file.seekg(0, std::ios::beg);
             file << header;
@@ -751,7 +758,7 @@ bool DB::write_to_file(int levelCheck)
                 item.second.items.insert(item.second.items.begin(), item.second.visible);
                 mainMemBuffer.insert({item.first, item.second.items});
             }
-            std::cout << std::to_string(mainMemBuffer.size()) << std::endl;
+            std::cout << "Membuffer Size: " << std::to_string(mainMemBuffer.size()) << std::endl;
             std::string header = std::to_string(mainMemBuffer.size()) + ',' + std::to_string(mainMemBuffer[mainMemBuffer.begin()->first].items.size()) + ',' + std::to_string(mainMemBuffer.begin()->first) + ',' + std::to_string(mainMemBuffer.rbegin()->first) + '\n';
             this->file.open(levelfiles[levelCheck - 1].fileNames[0]);
             file.seekg(0, std::ios::beg);
@@ -804,7 +811,7 @@ bool DB::write_to_file(int levelCheck)
                             }
                             mainMemBuffer.insert({key, Value(items)});
                         }
-                        std::cout << std::to_string(line_num) << std::endl;
+                        std::cout << "Line number: " << std::to_string(line_num) << std::endl;
                     }
                     file.close();
                 }
@@ -865,7 +872,7 @@ bool DB::write_to_file(int levelCheck)
                             }
                             mainMemBuffer.insert({key, Value(items)});
                         }
-                        std::cout << std::to_string(line_num) << std::endl;
+                        std::cout << "Line Num is" << std::to_string(line_num) << std::endl;
                     }
                     file.close();
                 }
@@ -895,12 +902,12 @@ bool DB::write_to_file(int levelCheck)
                             }
                             mainMemBuffer.insert({key, Value(items)});
                         }
-                        std::cout << std::to_string(line_num) << std::endl;
+                        std::cout << "Line num is" << std::to_string(line_num) << std::endl;
                     }
                     file.close();
                 }
                 this->file.open(levelfiles[levelCheck - 1].fileNames[0]);
-                std::cout << std::to_string(mainMemBuffer.size()) << std::endl;
+                std::cout << "Membuf Size: " << std::to_string(mainMemBuffer.size()) << std::endl;
                 std::string header = std::to_string(mainMemBuffer.size()) + ',' + std::to_string(mainMemBuffer[mainMemBuffer.begin()->first].items.size()) + ',' + std::to_string(mainMemBuffer.begin()->first) + ',' + std::to_string(mainMemBuffer.rbegin()->first) + '\n';
                 file.seekg(0, std::ios::beg);
                 file << header;
