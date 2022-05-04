@@ -277,10 +277,12 @@ void DB::scan(int min_key, int max_key) // be able to read from files to get the
 
 void DB::del(int key)
 {
-
+    std::cout << "Delete key within db.cpp is: " << key << std::endl;
     bool exisit = table.count(key); // check if this value exisists in memtable
     Value delete_key;
-    delete_key.items.push_back(0);
+    for(int i = 0 ; i < value_dimensions ; i++){
+        delete_key.items.push_back(0);
+    }
     if (exisit)
     {
         std::cout << "key value " << std::to_string(key) << " exists in the memetable" << std::endl;
