@@ -1,11 +1,8 @@
-# CS 561: Data Systems Architecture - TemplateDB
-
+# CS 561: An Implementation of the LSM Tree
 
 ## About
 
-TemplateDB is a simple template for you, the student, to use for the systems
-implementation project in CS 561. Note that this is a simple template, it is
-not extensive, rather it is meant to help guide you on what we expect when
+TemplateDB was a simple template given to our team to implement our data systems project in CS 561 in the Spring of 2022. It served as guide for us to extend into our current fully functional LSM tree.
 you implement the LSM tree. You can use this as base code or start from
 scratch.
 
@@ -13,13 +10,11 @@ scratch.
 ## Requirements
 
 You will need the following on your system (or alternatively develop on the
-CSA machines)
+BU CSA machines)
 
     1. CMake
     2. C++ Compiler
     3. GoogleTest (Auto compiled and fetched with CMake)
-
-
 
 ## Usage
 
@@ -91,7 +86,61 @@ OPERATOR KEY ARGS
 
 with the first line being the number of total operations.
 
+
+## Compiling the LSM Tree?? Main File?
+
+In the `templatedb` folder we have included a `Makefile` which compiles all the important files such as `main.cpp`, `operation.cpp`, and `db.cpp`. Run it simply by typing:
+
+```
+make
+```
+
+To run the compiled (what do we want to call the final file name) executable, type your command in the following syntax:
+
+```
+./mainMade <workload/data file> <table size> <tiering/leveling> <sizeRatio>
+```
+
+The input of `<workload/data file>` parameter will be whatever you have generated earlier using the `gen_data.py` or `gen_workload.py` command. This file will usually live in the `/data` folder.
+
+The input of `<table size>` parameter can be any integer greater than 0.
+
+The input of the `<tiering/leveling>` parameter must be either 0 for leveling, or 1 for tiering.
+
+The input of the `<sizeRatio>` parameter can be any integer (preferably less than 10 😂). 
+
+### An Example
+
+For example if you wanted to create an LSM tree with table size 100, tiering, 4 runs per level and the dataset `../../data/test_350_3.data`. You would run this command:
+
+```
+./mainMade ../../data/test_350_3.data 100 1 4
+```
+
+# Debugging/Code Paradigm
+
+## Operation
+### operation.hpp
+In this file, a templatedb file is created
+
+### operation.cpp
+
+## Main
+### main.cpp
+
+## DB
+### db.hpp
+
+### db.cpp
+
 ## Contact
 
-If you have any questions please feel free to see Ju Hyoung in office hours, or
-email me at jmun@bu.edu.
+If you have any questions please feel free to email our team:
+
+Adit Mehta
+
+Huda Irshad
+
+Amara Nwigwe
+
+Satha Kittirgan
