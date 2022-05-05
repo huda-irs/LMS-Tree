@@ -2,10 +2,7 @@
 
 ## About
 
-TemplateDB was a simple template given to our team to implement our data systems project in CS 561 in the Spring of 2022. It served as guide for us to extend into our current fully functional LSM tree.
-you implement the LSM tree. You can use this as base code or start from
-scratch.
-
+TemplateDB was a simple template given to our team to implement our data systems project in CS 561 in the Spring of 2022. It served as guide for us to extend into our current fully functional LSM tree. This readme will guide you in trying to understand our code and build onto it even further. For a more theoretical understanding of LSM trees and how we setup our code read our final course report `CS561__LSM_Tree_Final_Report.pdf.`
 
 ## Requirements
 
@@ -20,14 +17,12 @@ BU CSA machines)
 
 To compile, first create a build directory.
 
-
 ```bash
 mkdir build
 cd build
 ```
 
 Afterwards, build using cmake.
-
 
 ```bash
 cmake ..
@@ -51,7 +46,6 @@ ctest
 
 Both the basic test and persistence test will go through.
 
-
 ## Building Workloads and Datasets
 
 In the `tools` folder we have included two scripts `gen_data.py` and
@@ -67,25 +61,25 @@ gen_workload.py <rows> <dim_per_value> <max_key> <folder>
 ```
 
 Data is generated with a space separating each item.
-First line indicates 
+First line indicates
 
 ```
 Number of Keys  Dimensions of each Object
 ```
 
 Rest of lines follows the format of
+
 ```
 OPERATOR KEY VALUE
 ```
 
-While workloads follow the format of 
+While workloads follow the format of
 
 ```
 OPERATOR KEY ARGS
 ```
 
 with the first line being the number of total operations.
-
 
 ## Compiling the LSM Tree?? Main File?
 
@@ -107,7 +101,7 @@ The input of `<table size>` parameter can be any integer greater than 0.
 
 The input of the `<tiering/leveling>` parameter must be either 0 for leveling, or 1 for tiering.
 
-The input of the `<sizeRatio>` parameter can be any integer (preferably less than 10 😂). 
+The input of the `<sizeRatio>` parameter can be any integer (preferably less than 10 😂).
 
 ### An Example
 
@@ -120,15 +114,21 @@ For example if you wanted to create an LSM tree with table size 100, tiering, 4 
 # Debugging/Code Paradigm
 
 ## Operation
+
 ### operation.hpp
-In this file, a templatedb file is created
+
+In this C++ header file, we define our classes of operations that our database can accept from external workloads. We currently have implemented 5 types of operations: scan, insert, delete, put, and no operation. This file also contains information on all public and private functions/variables users can access.
 
 ### operation.cpp
 
+In this file, we parse our operations from the user given workload/data file and load it into a vector to be executed by our main.cpp file. The ops_from_file function parses each line from the workload/data file, seperating the operation, key value, and arguments. For each parsed line, ops_from_file uses an Operation constructor in which we define the operation type using the parsed operation string.
+
 ## Main
+
 ### main.cpp
 
 ## DB
+
 ### db.hpp
 
 ### db.cpp
