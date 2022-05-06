@@ -73,8 +73,6 @@ public:
     bool close();
 
     std::tuple<bool,int> load_data_file(std::string & fname, int pointer);
-
-    std::vector<Value> execute_op(Operation op);
      
     std::string dirName;
 

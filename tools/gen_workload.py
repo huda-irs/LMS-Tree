@@ -4,7 +4,8 @@ import random
 import sys
 
 MAX_VALUE = 2**16 - 1
-OPERATIONS = ['I', 'Q', 'S', 'D']
+# OPERATIONS = ['I', 'Q', 'S', 'D']
+OPERATIONS = ['Q']
 
 
 def get_op(dims, key_max):
@@ -16,9 +17,9 @@ def get_op(dims, key_max):
         args += [random.choice(range(key_max))]
         args.sort()
     elif (op_code == 'D'):
-	if ( random.choice(range(key_max))%2 == 0 ):
-	        args += [random.choice(range(key_max))]
-	        args.sort()
+        if ( random.choice(range(key_max))%2 == 0 ):
+            args += [random.choice(range(key_max))]
+            args.sort()
 
     return [op_code] + args
 
@@ -36,7 +37,7 @@ def main(args):
 
     with open(fname, 'w') as fid:
         writer = csv.writer(fid, delimiter=' ')
-        writer.writerow([num_ops])
+        writer.writerow([num_ops] + [dims])
         for _ in range(num_ops):
             writer.writerow(get_op(dims, key_max))
 

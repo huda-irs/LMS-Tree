@@ -4,15 +4,15 @@ using namespace templatedb;
 
 Operation::Operation(std::string op_string, int _key, std::vector<int> & _args)
 {
-    if (op_string == "I")
+    if (op_string == "I" || op_string =="PUT")
         type = PUT;
-    else if (op_string == "Q")
+    else if (op_string == "Q" || op_string == "GET")
         type = GET;
-    else if (op_string == "S")
+    else if (op_string == "S" ||op_string == "SCAN")
         type = SCAN;
-    else if (op_string[0]=='S')
+    else if (op_string[0]=='S'|| op_string == "SCAN\n")
         type = SCAN;
-    else if (op_string == "D")
+    else if (op_string == "D" ||  op_string == "DELETE")
         type = DELETE;
     else{
         type = NO_OP;
@@ -53,7 +53,12 @@ std::vector<Operation> Operation::ops_from_file(std::string file_name)
             {
                 args.push_back(stoi(item));
             }
-            ops.push_back(Operation(op_string, stoi(key), args));
+            if (args.size() > 0){
+                ops.push_back(Operation(op_string, stoi(key), args));
+            }
+            else {
+                ops.push_back(Operation(op_string, stoi(key), args));
+            }
         }
     }
     else
