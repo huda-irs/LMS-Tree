@@ -137,7 +137,7 @@ In this C++ header file, we define our classes of Levels, Value, and DB (databas
 
 ### db.cpp
 
-In this file, implementation of the operations of the LSM tree. The The close function of the db.cpp file writes out the new strucutre the LSM after completing the workload with the information mentioned in the section above (main.cpp). The delete, put, get, scan, and range scan functions were implemented as part of the query operations. All functiosn utiltize the load_data or Write_to_file function in some form which related to acessing main memory content.
+In this file, implementation of the operations of the LSM tree. The close function of the db.cpp file writes out the new strucutre the LSM after completing the workload with the information mentioned in the section above (main.cpp). The delete, put, get, scan, and range scan functions were implemented as part of the query operations. All functions utiltize the load_data or Write_to_file function in some form which related to acessing main memory content.
 
 ### Obtaining results
 
