@@ -4,8 +4,7 @@ import random
 import sys
 
 MAX_VALUE = 2**16 - 1
-# OPERATIONS = ['I', 'Q', 'S', 'D']
-OPERATIONS = ['Q']
+OPERATIONS = ['I', 'Q', 'S', 'D']
 
 
 def get_op(dims, key_max):

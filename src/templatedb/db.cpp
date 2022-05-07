@@ -15,9 +15,10 @@ Value DB::get(int key) // output result in terminal
     }
     else
     { // this is where we want to start scanning to files
+        if (table.size() > 0){
         write_to_file(1);
         table.clear();
-
+        }
         bool result;
         int count = 0;
         // scanning Levels from top to bottom
@@ -26,9 +27,11 @@ Value DB::get(int key) // output result in terminal
             int index = levelfiles[i].numFiles - 1;
             file.close();
             // Scanning runs from latest to oldest
+
             for (index = levelfiles[i].numFiles - 1; index >= 0; index--)
             {
                 this->file.open(levelfiles[i].fileNames[index], std::ios::in | std::ios::out);
+
                 // read header
                 std::ifstream fid(levelfiles[i].fileNames[index]);
                 std::string line;
